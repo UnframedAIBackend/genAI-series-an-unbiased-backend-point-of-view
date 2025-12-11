@@ -33,7 +33,6 @@ class Configuration:
             "CHUNK_SIZE": EnvVarSchema(required=False, type=int, default=1000),
             "CHUNK_OVERLAP": EnvVarSchema(required=False, type=int, default=200),
             "EMBEDDING_MODEL": EnvVarSchema(required=True, type=str),
-            "GEMINI_API_KEY": EnvVarSchema(required=True, type=str),
             "TZ": EnvVarSchema(required=False, type=str, default="America/Bogota"),
         }
         self._load_env_file()
