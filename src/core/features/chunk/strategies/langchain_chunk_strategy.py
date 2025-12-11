@@ -1,14 +1,12 @@
 from .i_chunk_strategy import IChunkStrategy
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
+from src.core.configuration.configuration import config
 
 class LangchainChunkStrategy(IChunkStrategy):
-    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200):
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+    def __init__(self):
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
+            chunk_size=config.get("CHUNK_SIZE"),
+            chunk_overlap=config.get("CHUNK_OVERLAP"),
             add_start_index=True
         )
     

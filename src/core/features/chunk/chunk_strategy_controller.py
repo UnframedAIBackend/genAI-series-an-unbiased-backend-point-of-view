@@ -1,5 +1,6 @@
 from io import BytesIO
 from pypdf import PdfReader
+
 from .chunk_strategy_service import ChunkStrategyService
 from .chunk_strategy import ChunkStrategy
 from .strategies.vanilla_chunk_strategy import VanillaChunkStrategy
@@ -18,60 +19,28 @@ class ChunkStrategyController:
     ):
         self.chunk_strategy_service = chunk_strategy_service
         self.file_management_service = file_management_service
-        
-        self._strategy_map = {
-            ChunkStrategy.VANILLA: VanillaChunkStrategy,
-            ChunkStrategy.LANGCHAIN: LangchainChunkStrategy,
-            ChunkStrategy.CHONKIE: ChonkieChunkStrategy,
-        }
-
-    def chunk_text(self, file_id: str) -> list[str]:
-        """Extract text from file and chunk it using the configured strategy."""
-        file_bytes = self.file_management_service.get_file(file_id)
-        
-        if not file_bytes:
-            raise ValueError(f"File not found: {file_id}")
-        
-        text = self._extract_text_from_pdf(file_bytes)
-        
-        return self.chunk_strategy_service.chunk(text)
     
-    def chunk_file_with_strategy(self, file_id: str, strategy: str) -> dict:
-        """Chunk a file using a specific strategy (overrides config)."""
-        # Validate strategy
-        if strategy not in [s.value for s in ChunkStrategy]:
-            valid_strategies = ", ".join([s.value for s in ChunkStrategy])
-            raise ValueError(
-                f"Invalid strategy '{strategy}'. Valid options: {valid_strategies}"
-            )
-        
-        # Get file
+    def chunk_file_with_strategy(self, file_id: str, strategy: ChunkStrategy) -> dict:
         file_bytes = self.file_management_service.get_file(file_id)
         if not file_bytes:
             raise ValueError(f"File not found: {file_id}")
         
-        # Extract text from PDF
-        text = self._extract_text_from_pdf(file_bytes)
+        text = self.__extract_text_from_pdf(file_bytes)
         
-        # Get strategy class and chunk
-        chunk_size = config.get("CHUNK_SIZE")
-        strategy_class = self._strategy_map[strategy]
-        chunker = strategy_class(chunk_size=chunk_size)
-        chunks = chunker.chunk(text)
+        chunks = self.chunk_strategy_service.chunk(strategy, text)
         
-        # Get file metadata
         file_info = self.file_management_service.get_info(file_id)
         
         return {
             "file_id": file_id,
             "filename": file_info.get("original_filename") if file_info else "unknown",
             "strategy": strategy,
-            "chunk_size": chunk_size,
+            "chunk_size": config.get("CHUNK_SIZE"),
             "total_chunks": len(chunks),
             "chunks": chunks
         }
     
-    def _extract_text_from_pdf(self, file_bytes: bytes) -> str:
+    def __extract_text_from_pdf(self, file_bytes: bytes) -> str:
         """Extract text content from PDF bytes."""
         reader = PdfReader(BytesIO(file_bytes))
         text = ""

@@ -30,9 +30,10 @@ class Configuration:
             "DATABASE_ENGINE": EnvVarSchema(required=True, type=str),
             "UPLOADS_PATH": EnvVarSchema(required=True, type=str),
             "FILE_STORAGE_VENDOR": EnvVarSchema(required=True, type=str),
-            "CHUNK_STRATEGY": EnvVarSchema(required=True, type=str),
             "CHUNK_SIZE": EnvVarSchema(required=False, type=int, default=1000),
+            "CHUNK_OVERLAP": EnvVarSchema(required=False, type=int, default=200),
             "EMBEDDING_MODEL": EnvVarSchema(required=True, type=str),
+            "GEMINI_API_KEY": EnvVarSchema(required=True, type=str),
             "TZ": EnvVarSchema(required=False, type=str, default="America/Bogota"),
         }
         self._load_env_file()

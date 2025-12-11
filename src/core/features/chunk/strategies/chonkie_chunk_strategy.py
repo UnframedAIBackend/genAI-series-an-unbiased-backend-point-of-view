@@ -4,12 +4,11 @@ from .i_chunk_strategy import IChunkStrategy
 from src.core.configuration.configuration import config
 
 class ChonkieChunkStrategy(IChunkStrategy):
-    def __init__(self, chunk_size: int = 2048):
-        self.chunk_size = chunk_size
+    def __init__(self):
         self.chunker = SemanticChunker(
             embedding_model=config.get("EMBEDDING_MODEL"),
             threshold=0.8,
-            chunk_size=chunk_size,
+            chunk_size=config.get("CHUNK_SIZE"),
             skip_window=1
         )
     

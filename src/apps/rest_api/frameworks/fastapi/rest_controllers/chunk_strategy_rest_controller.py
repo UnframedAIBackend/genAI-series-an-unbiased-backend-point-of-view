@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path
 from src.core.container.container import container
 from src.core.features.chunk.chunk_strategy_controller import ChunkStrategyController
+from src.core.features.chunk.chunk_strategy import ChunkStrategy
 
 
 class ChunkStrategyRestController:
@@ -20,12 +21,12 @@ class ChunkStrategyRestController:
 
     async def chunk_file(
         self,
-        strategy: str = Path(..., description="Chunking strategy (vanilla, langchain, chonkie)"),
+        strategy: ChunkStrategy = Path(..., description="Chunking strategy"),
         file_id: str = Path(..., description="File ID")
     ) -> dict:
         """Chunk a file using the specified strategy."""
         try:
-            return self.chunk_strategy_controller.chunk_file_with_strategy(file_id, strategy)
+            return self.chunk_strategy_controller.chunk_file_with_strategy(file_id, strategy.value)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:

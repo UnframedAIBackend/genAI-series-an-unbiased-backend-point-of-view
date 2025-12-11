@@ -1,9 +1,9 @@
 from .i_chunk_strategy import IChunkStrategy
-
+from src.core.configuration.configuration import config
 
 class VanillaChunkStrategy(IChunkStrategy):
-    def __init__(self, chunk_size: int = 1000):
-        self.chunk_size = chunk_size
+    def __init__(self):
+        self.chunk_size = config.get("CHUNK_SIZE")
     
     def chunk(self, content: str) -> list[str]:
         """Chunk text into fixed-size chunks by character count."""
