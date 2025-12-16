@@ -10,6 +10,7 @@ class EnvConfig(TypedDict, total=False):
 
     DATABASE_ENGINE: str
     TZ: str
+    HF_TOKEN: str
 
 @dataclass
 class EnvVarSchema:
@@ -34,6 +35,7 @@ class Configuration:
             "CHUNK_OVERLAP": EnvVarSchema(required=False, type=int, default=200),
             "EMBEDDING_MODEL": EnvVarSchema(required=True, type=str),
             "TZ": EnvVarSchema(required=False, type=str, default="America/Bogota"),
+            "HF_TOKEN": EnvVarSchema(required=True, type=str),
         }
         self._load_env_file()
         self._validate_config()

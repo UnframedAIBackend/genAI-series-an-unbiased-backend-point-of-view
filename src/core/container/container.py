@@ -3,6 +3,8 @@ from src.core.features.file_management.file_management_service import FileManage
 from src.core.features.file_management.file_management_controller import FileManagementController
 from src.core.features.chunk.chunk_strategy_service import ChunkStrategyService
 from src.core.features.chunk.chunk_strategy_controller import ChunkStrategyController
+from src.core.features.embedding.embedding_service import EmbeddingService
+from src.core.features.embedding.embedding_controller import EmbeddingController
 
 class Container(containers.DeclarativeContainer):
     
@@ -19,6 +21,13 @@ class Container(containers.DeclarativeContainer):
         ChunkStrategyController,
         chunk_strategy_service=chunk_strategy_service,
         file_management_service=file_management_service
+    )
+    
+    embedding_service = providers.Singleton(EmbeddingService)
+    
+    embedding_controller = providers.Factory(
+        EmbeddingController,
+        embedding_service=embedding_service
     )
 
 container = Container()
