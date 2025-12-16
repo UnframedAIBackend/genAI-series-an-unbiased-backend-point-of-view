@@ -36,6 +36,7 @@ class Configuration:
             "EMBEDDING_MODEL": EnvVarSchema(required=True, type=str),
             "TZ": EnvVarSchema(required=False, type=str, default="America/Bogota"),
             "HF_TOKEN": EnvVarSchema(required=True, type=str),
+            "LOG_LEVEL": EnvVarSchema(required=False, type=str, default="INFO"),
         }
         self._load_env_file()
         self._validate_config()

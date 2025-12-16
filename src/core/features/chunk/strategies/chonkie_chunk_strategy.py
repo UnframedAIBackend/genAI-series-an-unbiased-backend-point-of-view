@@ -14,5 +14,10 @@ class ChonkieChunkStrategy(IChunkStrategy):
     
     def chunk(self, content: str) -> list[str]:
         """Chunk text using Chonkie's SemanticChunker."""
-        chunks = self.chunker.chunk(content)
+        import warnings
+        
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in divide")
+            chunks = self.chunker.chunk(content)
+            
         return [chunk.text for chunk in chunks]

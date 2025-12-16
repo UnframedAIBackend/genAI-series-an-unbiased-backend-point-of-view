@@ -2,6 +2,7 @@
 
 help:
 	@echo "Available commands:"
+	@echo "  make preload      - Preload embedding models"
 	@echo "  make dev          - Run the REST API development server (starts Docker)"
 	@echo "  make migrate      - Run SQL migrations (starts Docker)"
 	@echo "  make seed         - Run SQL seeders (starts Docker)"
@@ -9,8 +10,11 @@ help:
 	@echo "  make docker-up    - Start Docker services"
 	@echo "  make docker-down  - Stop Docker services"
 
-dev:
+dev: preload
 	uv run python src/apps/rest_api/main.py
+
+preload:
+	uv run python src/scripts/preload.py
 
 migrate: docker-up
 	uv run python src/core/database/sql/migrate.py
@@ -23,6 +27,7 @@ seed-nosql: docker-up
 
 docker-up:
 	docker compose up -d --wait
+
 
 docker-down:
 	docker compose down
