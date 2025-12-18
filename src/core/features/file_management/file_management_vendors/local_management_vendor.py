@@ -12,7 +12,7 @@ class LocalManagementVendor(IManagementVendor):
         self.base_path.mkdir(parents=True, exist_ok=True)
         self.metadata_store: dict[str, dict] = {}
 
-    def upload(self, file: BinaryIO, filename: str) -> dict:
+    def upload(self, file: BinaryIO, filename: str) -> FileMetadata:
         """Upload a file to local storage with hash-based naming."""
         content = file.read()
         file_hash = hashlib.md5(content).hexdigest()[:16]
@@ -31,13 +31,14 @@ class LocalManagementVendor(IManagementVendor):
             "path": str(destination_path.absolute()),
             "size": len(content),
             "uploaded_at": datetime.now().isoformat(),
+            "status": FileStatus.COMPLETED
         }
         
         self.metadata_store[file_hash] = metadata
         
         return metadata
 
-    def get_info(self, file_id: str) -> Optional[dict]:
+    def get_info(self, file_id: str) -> Optional[FileMetadata]:
         """Retrieve file metadata by ID (hash)."""
         return self.metadata_store.get(file_id)
 

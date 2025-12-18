@@ -18,10 +18,10 @@ class FileManagementService:
         
         self.vendor: IManagementVendor = vendor_class(base_path=uploads_path)
 
-    def upload(self, file: BinaryIO, filename: str) -> dict:
+    def upload(self, file: BinaryIO, filename: str) -> FileMetadata:
         return self.vendor.upload(file, filename)
     
-    def get_info(self, file_id: str) -> Optional[dict]:
+    def get_info(self, file_id: str) -> Optional[FileMetadata]:
         return self.vendor.get_info(file_id)
     
     def get_file(self, file_id: str) -> Optional[bytes]:

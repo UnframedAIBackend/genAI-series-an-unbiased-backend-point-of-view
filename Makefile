@@ -10,7 +10,7 @@ help:
 	@echo "  make docker-up    - Start Docker services"
 	@echo "  make docker-down  - Stop Docker services"
 
-dev: preload
+dev: preload docker-up
 	uv run python src/apps/rest_api/main.py
 
 preload:

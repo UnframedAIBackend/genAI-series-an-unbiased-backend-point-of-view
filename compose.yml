@@ -7,13 +7,13 @@ services:
       TZ: America/Bogota
       PGTZ: America/Bogota
     networks:
-      - adaptable_backend_python
+      - genai-series
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test: [ "CMD-SHELL", "pg_isready" ]
 
   mongodb:
     build:
@@ -36,13 +36,50 @@ services:
     volumes:
       - "mongo_data:/data/db"
       - "mongo_config:/data/configdb"
+      - "./deploy/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro"
     networks:
-      - adaptable_backend_python
+      - genai-series
+
+  redis:
+    image: redis:8.4.0-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - genai-series
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    entrypoint: /bin/sh
+    command: -c "ollama serve & sleep 5 && ollama pull tinyllama && wait"
+    healthcheck:
+      test: [ "CMD-SHELL", "ollama list || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - genai-series
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    ports:
+      - "5000:5000"
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db
+    volumes:
+      - mlflow_data:/mlflow
+    networks:
+      - genai-series
 
 networks:
-  adaptable_backend_python:
+  genai-series:
+
 
 volumes:
   postgres_data:
   mongo_data:
   mongo_config:
+  ollama_data:
+  mlflow_data:

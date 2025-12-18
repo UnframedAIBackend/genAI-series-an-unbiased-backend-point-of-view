@@ -5,6 +5,8 @@ from src.core.features.chunk.chunk_strategy_service import ChunkStrategyService
 from src.core.features.chunk.chunk_strategy_controller import ChunkStrategyController
 from src.core.features.embedding.embedding_service import EmbeddingService
 from src.core.features.embedding.embedding_controller import EmbeddingController
+from src.core.features.rag.rag_service import RagService
+from src.core.features.rag.rag_controller import RagController
 
 class Container(containers.DeclarativeContainer):
     
@@ -28,6 +30,13 @@ class Container(containers.DeclarativeContainer):
     embedding_controller = providers.Factory(
         EmbeddingController,
         embedding_service=embedding_service
+    )
+
+    rag_service = providers.Singleton(RagService)
+
+    rag_controller = providers.Factory(
+        RagController,
+        rag_service=rag_service
     )
 
 container = Container()
