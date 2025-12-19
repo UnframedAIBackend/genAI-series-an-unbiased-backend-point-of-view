@@ -1,0 +1,22 @@
+# Temporal dynamic configuration for development with PostgreSQL
+# This file configures Temporal to use separate schemas for persistence and visibility
+
+# Enable search attributes
+system.forceSearchAttributesCacheRefreshOnRead:
+  - value: true
+    constraints: {}
+
+# Workflow execution retention
+system.defaultWorkflowExecutionRetentionTime:
+  - value: "168h" # 7 days
+    constraints: {}
+
+# History archival
+system.enableArchival:
+  - value: false
+    constraints: {}
+
+# Visibility configuration
+system.advancedVisibilityWritingMode:
+  - value: "on"
+    constraints: {}

@@ -7,7 +7,7 @@ from src.core.container.container import container
 class FileManagementRestController:
     def __init__(self) -> None:
         self.file_management_controller: FileManagementController = container.file_management_controller()
-        
+
         self.router = APIRouter(prefix="/files", tags=["file-management"])
         self._setup_routes()
 
@@ -30,12 +30,12 @@ class FileManagementRestController:
         try:
             content = await file.read()
             file_obj = BytesIO(content)
-            
-            metadata = self.file_management_controller.upload_file(
-                file_obj, 
+
+            metadata = await self.file_management_controller.upload_file(
+                file_obj,
                 file.filename or "unknown"
             )
-            
+
             return {
                 "message": "File uploaded successfully",
                 "file_id": metadata["id"],
@@ -45,14 +45,14 @@ class FileManagementRestController:
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
-    
+
     async def get_file_info(self, file_id: str) -> dict:
         """Get file metadata by ID."""
         info = self.file_management_controller.get_file_info(file_id)
-        
+
         if not info:
             raise HTTPException(status_code=404, detail="File not found")
-        
+
         return info
 
 

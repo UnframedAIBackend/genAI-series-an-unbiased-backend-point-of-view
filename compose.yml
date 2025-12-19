@@ -10,6 +10,7 @@ services:
       - genai-series
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./containers/postgres/init:/docker-entrypoint-initdb.d
     ports:
       - 5432:5432
     healthcheck:
@@ -40,13 +41,6 @@ services:
     networks:
       - genai-series
 
-  redis:
-    image: redis:8.4.0-alpine
-    ports:
-      - "6379:6379"
-    networks:
-      - genai-series
-
   ollama:
     image: ollama/ollama:latest
     volumes:
@@ -73,6 +67,108 @@ services:
     networks:
       - genai-series
 
+  temporal:
+    image: temporalio/auto-setup:1.26.2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=postgres
+      - POSTGRES_SEEDS=postgres
+      - DBNAME=temporal
+      - ENABLE_ES=false
+      - SKIP_SCHEMA_SETUP=false
+      - SKIP_DEFAULT_NAMESPACE_CREATION=false
+      - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/development-sql.yaml
+      - LOG_LEVEL=info
+    ports:
+      - "7233:7233"
+    networks:
+      - genai-series
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "tctl",
+          "--address",
+          "temporal:7233",
+          "workflow",
+          "list"
+        ]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - ./containers/temporal/config:/etc/temporal/config/dynamicconfig
+
+  temporal-ui:
+    image: temporalio/ui:2.44.0
+    depends_on:
+      temporal:
+        condition: service_healthy
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    ports:
+      - "8080:8080"
+    networks:
+      - genai-series
+
+  temporal-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+      args:
+        - HF_TOKEN=${HF_TOKEN}
+        - DATABASE_URL=${DATABASE_URL}
+        - TEMPORAL_HOST=${TEMPORAL_HOST}
+        - LOG_LEVEL=${LOG_LEVEL:-INFO}
+        - DATABASE_ENGINE=${DATABASE_ENGINE:-mongodb}
+    profiles: [app]
+    depends_on:
+      temporal:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    networks:
+      - genai-series
+    restart: unless-stopped
+    volumes:
+      - ./uploads:/app/uploads
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+      args:
+        - HF_TOKEN=${HF_TOKEN}
+        - DATABASE_URL=${DATABASE_URL}
+        - TEMPORAL_HOST=${TEMPORAL_HOST}
+        - LOG_LEVEL=${LOG_LEVEL:-INFO}
+        - DATABASE_ENGINE=${DATABASE_ENGINE:-mongodb}
+    profiles: [app]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+    env_file: .env
+    ports:
+      - "8000:8000"
+    networks:
+      - genai-series
+    restart: unless-stopped
+    volumes:
+      - ./uploads:/app/uploads
+
 networks:
   genai-series:
 
@@ -83,3 +179,4 @@ volumes:
   mongo_config:
   ollama_data:
   mlflow_data:
+  temporal_data:

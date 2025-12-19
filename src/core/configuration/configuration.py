@@ -21,22 +21,24 @@ class EnvVarSchema:
 
 class Configuration:
     _instance: "Configuration | None" = None
-    
+
     def __init__(self) -> None:
         self._config: dict[str, Any] = {}
         self._env_schema: dict[str, EnvVarSchema] = {
-            "NODE_ENV": EnvVarSchema(required=True, type=str),
-            "PORT": EnvVarSchema(required=True, type=int),
+            "NODE_ENV": EnvVarSchema(required=False, type=str, default="development"),
+            "PORT": EnvVarSchema(required=False, type=int, default=8000),
             "DATABASE_URL": EnvVarSchema(required=True, type=str),
-            "DATABASE_ENGINE": EnvVarSchema(required=True, type=str),
-            "UPLOADS_PATH": EnvVarSchema(required=True, type=str),
-            "FILE_STORAGE_VENDOR": EnvVarSchema(required=True, type=str),
-            "CHUNK_SIZE": EnvVarSchema(required=False, type=int, default=1000),
+            "DATABASE_ENGINE": EnvVarSchema(required=False, type=str, default="mongodb"),
+            "UPLOADS_PATH": EnvVarSchema(required=False, type=str, default="uploads"),
+            "FILE_STORAGE_VENDOR": EnvVarSchema(required=False, type=str, default="local"),
+            "CHUNK_SIZE": EnvVarSchema(required=False, type=int, default=2048),
             "CHUNK_OVERLAP": EnvVarSchema(required=False, type=int, default=200),
-            "EMBEDDING_MODEL": EnvVarSchema(required=True, type=str),
+            "EMBEDDING_MODEL": EnvVarSchema(required=False, type=str, default="vanilla"),
             "TZ": EnvVarSchema(required=False, type=str, default="America/Bogota"),
             "HF_TOKEN": EnvVarSchema(required=True, type=str),
             "LOG_LEVEL": EnvVarSchema(required=False, type=str, default="INFO"),
+            "TEMPORAL_HOST": EnvVarSchema(required=True, type=str),
+            "EMBEDDING_MODEL_CHUNK": EnvVarSchema(required=False, type=str, default="all-MiniLM-L6-v2"),
         }
         self._load_env_file()
         self._validate_config()
@@ -76,6 +78,8 @@ class Configuration:
                 return int(value)
             except ValueError:
                 raise ValueError(f"Invalid number value: {value}")
+        if value_type == bool:
+            return value.lower() in ("true", "1", "yes")
         return value
 
     def _load_env_file(self) -> None:

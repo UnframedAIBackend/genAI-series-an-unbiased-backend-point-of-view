@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import BinaryIO, Optional
 from datetime import datetime
 
-from .i_management_vendor import IManagementVendor
+from .i_management_vendor import IManagementVendor, FileMetadata, FileStatus
 
 
 class LocalManagementVendor(IManagementVendor):
@@ -16,14 +16,14 @@ class LocalManagementVendor(IManagementVendor):
         """Upload a file to local storage with hash-based naming."""
         content = file.read()
         file_hash = hashlib.md5(content).hexdigest()[:16]
-        
+
         file_extension = Path(filename).suffix
         hashed_filename = f"{file_hash}{file_extension}"
         destination_path = self.base_path / hashed_filename
-        
+
         with open(destination_path, 'wb') as dest_file:
             dest_file.write(content)
-        
+
         metadata = {
             "id": file_hash,
             "original_filename": filename,
@@ -31,11 +31,11 @@ class LocalManagementVendor(IManagementVendor):
             "path": str(destination_path.absolute()),
             "size": len(content),
             "uploaded_at": datetime.now().isoformat(),
-            "status": FileStatus.COMPLETED
+            "status": FileStatus.PENDING
         }
-        
+
         self.metadata_store[file_hash] = metadata
-        
+
         return metadata
 
     def get_info(self, file_id: str) -> Optional[FileMetadata]:

@@ -6,7 +6,7 @@ from src.core.configuration.configuration import config
 
 class SQLMigrate:
     def __init__(self):
-        self.migrations_dir = Path("src/core/database/sql/migrations")
+        self.migrations_dir = Path("src/database/sql/migrations")
         self.database_url = config.get("DATABASE_URL").replace("+asyncpg", "")
     
     async def run(self) -> None:

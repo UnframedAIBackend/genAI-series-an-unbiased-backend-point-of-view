@@ -1,16 +1,27 @@
 from typing import BinaryIO, Optional
+import logging
+import json
+
 from .file_management_service import FileManagementService
+from .file_management_vendors.i_management_vendor import FileMetadata
+from src.core.features.rag.rag_service import RagService
 
 
 class FileManagementController:
 
-    def __init__(self, file_management_service: FileManagementService):
+    def __init__(self, file_management_service: FileManagementService, rag_service: RagService):
         self.file_management_service = file_management_service
+        self.rag_service = rag_service
 
-    def upload_file(self, file: BinaryIO, filename: str) -> FileMetadata:
+    async def upload_file(self, file: BinaryIO, filename: str) -> FileMetadata:
         file_metadata = self.file_management_service.upload(file, filename)
-        # call celery task to process file
+
+        # Trigger RAG workflow through RagService
+        workflow_info = await self.rag_service.start_file_processing(file_metadata)
+        logging.info(f"RAG workflow started for file {json.dumps(workflow_info)}")
+
         return file_metadata
 
     def get_file_info(self, file_id: str) -> Optional[FileMetadata]:
         return self.file_management_service.get_info(file_id)
+

@@ -4,7 +4,7 @@ BEGIN;
 
 DO $$
 BEGIN
-    CREATE TABLE IF NOT EXISTS notes (
+    CREATE TABLE IF NOT EXISTS app.notes (
         id SERIAL PRIMARY KEY NOT NULL,
         content VARCHAR(255) NOT NULL,
         times_sent INT NOT NULL DEFAULT 0,
