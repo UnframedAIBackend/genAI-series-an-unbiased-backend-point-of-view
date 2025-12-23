@@ -1,48 +1,33 @@
 from temporalio import activity
-from typing import List
-from sentence_transformers import SentenceTransformer
 
-from src.core.features.rag.workflows.models import ChunkData, EmbeddingData
+from src.core.container.container import container
+from src.core.features.rag.workflows.activities.activity_output import ChunkData, EmbeddingData, EmbeddingItem
 
 
 @activity.defn
-async def generate_embeddings(chunks: List[ChunkData], embedding_model: str) -> List[EmbeddingData]:
-    """
-    Generate embeddings for text chunks using the specified model.
+async def generate_embeddings(chunk_data: ChunkData) -> EmbeddingData:
     
-    Args:
-        chunks: List of chunk data to embed
-        embedding_model: Model identifier to use for embeddings
-        
-    Returns:
-        List of embedding data with vectors and metadata
-    """
-    # Load the embedding model
-    model = SentenceTransformer(embedding_model)
+    embedding_model = config.get("EMBEDDING_MODEL_CHUNK")
+    embedding_service = container.embedding_service()
     
-    # Extract text content from chunks
-    texts = [chunk.content for chunk in chunks]
+    texts = [chunk.content for chunk in chunk_data.chunks]
     
-    # Generate embeddings in batch
-    embeddings = model.encode(texts, show_progress_bar=False)
+    embeddings = embedding_service.generate(embedding_model, texts)
     
-    # Create EmbeddingData objects
-    embedding_data_list = []
-    for chunk, embedding in zip(chunks, embeddings):
-        embedding_data = EmbeddingData(
-            chunk_id=chunk.chunk_id,
-            embedding=embedding.tolist(),
+    embedding_items = []
+    for chunk, embedding in zip(chunk_data.chunks, embeddings):
+        embedding_items.append(EmbeddingItem(
+            content=chunk.content,
+            embedding=embedding,
             metadata={
                 **chunk.metadata,
-                'embedding_model': embedding_model,
-                'embedding_dim': len(embedding)
-            }
-        )
-        embedding_data_list.append(embedding_data)
+                "embedding_model": embedding_model,
+                "file_id": chunk.file_id   
+            },
+        ))
     
     activity.logger.info(
-        f"Generated {len(embedding_data_list)} embeddings using {embedding_model} "
-        f"(dim: {len(embeddings[0])})"
+        f"Generated {len(embeddings)} embeddings using {embedding_model} model"
     )
     
-    return embedding_data_list
+    return EmbeddingData(embeddings=embedding_items)

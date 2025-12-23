@@ -4,14 +4,18 @@ from src.core.configuration.configuration import config
 from src.core.features.file_management.file_management_vendors import i_management_vendor
 from src.core.features.file_management.file_management_vendors.local_management_vendor import LocalManagementVendor
 
+from src.core.features.file_management.file_management_repository import FileManagementRepository
+
 class FileManagementService:
     _vendors: dict[str, Type[i_management_vendor.IManagementVendor]] = {
         "local": LocalManagementVendor,
     }
 
-    def __init__(self):
+    def __init__(self, repository: FileManagementRepository):
         vendor_type = config.get("FILE_STORAGE_VENDOR")
         uploads_path = config.get("UPLOADS_PATH")
+        
+        self.repository = repository
 
         vendor_class = self._vendors.get(vendor_type)
         if not vendor_class:
@@ -27,3 +31,4 @@ class FileManagementService:
 
     def get_file(self, file_id: str) -> Optional[bytes]:
         return self.vendor.get_file(file_id)
+

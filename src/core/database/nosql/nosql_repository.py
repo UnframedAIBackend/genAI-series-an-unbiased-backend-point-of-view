@@ -22,6 +22,12 @@ class NoSQLRepository(IRepository[T]):
         data["id"] = str(result.inserted_id)
         return data
 
+    async def create_many(self, data: List[dict]) -> List[dict]:
+        result = await self.collection.insert_many(data)
+        for document in data:
+            document["id"] = str(document.pop("_id"))
+        return data
+
     async def find_all(self) -> List[dict]:
         results = []
         async for document in self.collection.find({}):

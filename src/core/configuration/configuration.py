@@ -33,7 +33,7 @@ class Configuration:
             "FILE_STORAGE_VENDOR": EnvVarSchema(required=False, type=str, default="local"),
             "CHUNK_SIZE": EnvVarSchema(required=False, type=int, default=2048),
             "CHUNK_OVERLAP": EnvVarSchema(required=False, type=int, default=200),
-            "EMBEDDING_MODEL": EnvVarSchema(required=False, type=str, default="vanilla"),
+            "CHUNK_STRATEGY": EnvVarSchema(required=False, type=str, default="vanilla"),
             "TZ": EnvVarSchema(required=False, type=str, default="America/Bogota"),
             "HF_TOKEN": EnvVarSchema(required=True, type=str),
             "LOG_LEVEL": EnvVarSchema(required=False, type=str, default="INFO"),

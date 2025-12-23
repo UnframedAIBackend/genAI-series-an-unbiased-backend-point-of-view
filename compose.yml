@@ -16,6 +16,20 @@ services:
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready" ]
 
+  postgres_migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production-base
+    profiles: [ app ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    command: make migrate-sql
+    networks:
+      - genai-series
+
   mongodb:
     build:
       context: ./containers/mongodb
@@ -38,6 +52,20 @@ services:
       - "mongo_data:/data/db"
       - "mongo_config:/data/configdb"
       - "./deploy/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro"
+    networks:
+      - genai-series
+
+  mongo_migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production-base
+    profiles: [ app ]
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    env_file: .env
+    command: make migrate-nosql
     networks:
       - genai-series
 
@@ -89,15 +117,7 @@ services:
     networks:
       - genai-series
     healthcheck:
-      test:
-        [
-          "CMD",
-          "tctl",
-          "--address",
-          "temporal:7233",
-          "workflow",
-          "list"
-        ]
+      test: [ "CMD", "tctl", "--address", "temporal:7233", "workflow", "list" ]
       interval: 1s
       timeout: 5s
       retries: 30
@@ -117,24 +137,26 @@ services:
     networks:
       - genai-series
 
-  temporal-worker:
+  rag-worker:
     build:
       context: .
       dockerfile: Dockerfile
       target: worker
-      args:
-        - HF_TOKEN=${HF_TOKEN}
-        - DATABASE_URL=${DATABASE_URL}
-        - TEMPORAL_HOST=${TEMPORAL_HOST}
-        - LOG_LEVEL=${LOG_LEVEL:-INFO}
-        - DATABASE_ENGINE=${DATABASE_ENGINE:-mongodb}
-    profiles: [app]
+    profiles: [ app ]
     depends_on:
       temporal:
         condition: service_healthy
       postgres:
         condition: service_healthy
     env_file: .env
+    environment:
+      - TEMPORAL_HOST=temporal:7233
+    healthcheck:
+      test: [ "CMD-SHELL", "pgrep -f 'python.*worker.py' > /dev/null || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
     networks:
       - genai-series
     restart: unless-stopped
@@ -146,23 +168,23 @@ services:
       context: .
       dockerfile: Dockerfile
       target: api
-      args:
-        - HF_TOKEN=${HF_TOKEN}
-        - DATABASE_URL=${DATABASE_URL}
-        - TEMPORAL_HOST=${TEMPORAL_HOST}
-        - LOG_LEVEL=${LOG_LEVEL:-INFO}
-        - DATABASE_ENGINE=${DATABASE_ENGINE:-mongodb}
-    profiles: [app]
+    profiles: [ app ]
     depends_on:
-      postgres:
+      postgres_migrator:
         condition: service_healthy
-      mongodb:
+      mongo_migrator:
         condition: service_healthy
       temporal:
         condition: service_healthy
     env_file: .env
     ports:
       - "8000:8000"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8000/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
     networks:
       - genai-series
     restart: unless-stopped

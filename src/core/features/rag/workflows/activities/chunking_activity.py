@@ -1,48 +1,39 @@
 from temporalio import activity
-from typing import List
-import os
-from pathlib import Path
 
-from src.core.features.rag.workflows.models import ChunkData
-from src.core.features.chunk.chunk_strategy_service import ChunkStrategyService
+from src.core.container.container import container
+from src.core.features.rag.workflows.activities.activity_output import ChunkData
+from src.core.configuration.configuration import config
 
 
 @activity.defn
-async def chunk_file(file_path: str, chunk_strategy: str) -> List[ChunkData]:
-    """
-    Chunk a file using the specified strategy.
-
-    Args:
-        file_path: Path to the file to chunk
-        chunk_strategy: Strategy to use (semantic, recursive, fixed)
-
-    Returns:
-        List of chunk data with content and metadata
-    """
-    # Read file content
-    file_content = Path(file_path).read_text(encoding='utf-8')
-
-    # Initialize chunk service with strategy
-    chunk_service = ChunkStrategyService(strategy=chunk_strategy)
-
-    # Process chunks
-    chunks = chunk_service.chunk_text(file_content)
-
-    # Convert to ChunkData objects
-    chunk_data_list = []
-    for idx, chunk in enumerate(chunks):
-        chunk_data = ChunkData(
-            chunk_id=f"{Path(file_path).stem}_{idx}",
-            content=chunk.get('text', chunk.get('content', '')),
+async def chunk_file(file_id: str) -> ChunkData:
+    file_management_service = container.file_management_service()
+    chunk_strategy_service = container.chunk_strategy_service()
+    
+    file_content_bytes = file_management_service.get_file(file_id)
+    if not file_content_bytes:
+        raise ValueError(f"Could not retrieve content for file {file_id}")
+    
+    file_content = file_content_bytes.decode('utf-8')
+    
+    strategy = config.get("CHUNK_STRATEGY")
+    
+    chunks_text = chunk_strategy_service.chunk(strategy, file_content)
+    
+    chunk_items = []
+    for idx, text in enumerate(chunks_text):
+        chunk_items.append(ChunkItem(
+            content=text,
             metadata={
-                'chunk_index': idx,
-                'strategy': chunk_strategy,
-                'file_path': file_path,
-                **chunk.get('metadata', {})
+                "file_id": file_id,
+                "chunk_index": idx,
+                "total_chunks": len(chunks_text)
             }
-        )
-        chunk_data_list.append(chunk_data)
-
-    activity.logger.info(f"Chunked file {file_path} into {len(chunk_data_list)} chunks using {chunk_strategy} strategy")
-
-    return chunk_data_list
+        ))
+    
+    activity.logger.info(
+        f"Chunked file {file_id} "
+        f"into {len(chunk_items)} chunks using {strategy} strategy"
+    )
+    
+    return ChunkData(strategy=strategy, chunks=chunk_items)

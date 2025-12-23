@@ -30,6 +30,16 @@ class SQLRepository(IRepository[T]):
             result = await session.execute(sql, data)
             await session.commit()
             return result.mappings().first()
+    
+    async def create_many(self, data: [dict]) -> List[T]:
+        columns = ", ".join(data[0].keys())
+        values = ", ".join([f":{k}" for k in data[0].keys()])
+        sql = text(f"INSERT INTO {self.full_table_name} ({columns}) VALUES ({values}) RETURNING *")
+        
+        async with AsyncSession(self.engine) as session:
+            result = await session.execute(sql, data)
+            await session.commit()
+            return result.mappings().all()  
 
     async def find_by_id(self, id: int) -> Optional[T]:
         async with AsyncSession(self.engine) as session:

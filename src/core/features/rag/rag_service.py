@@ -1,9 +1,10 @@
 import os
 from typing import List, Dict
-from src.core.features.rag.workflows.temporal_client import TemporalClientSingleton
-from src.core.features.rag.workflows.models import FileProcessingInput
-from src.core.features.rag.workflows.file_processing_workflow import FileProcessingWorkflow
+
 from src.core.configuration.configuration import config
+from src.core.features.rag.workflows.temporal_client import TemporalClientSingleton
+from src.core.features.rag.workflows.activities.activity_output import FileProcessingInput
+from src.core.features.rag.workflows.file_processing_workflow import FileProcessingWorkflow
 
 class RagService:
     def __init__(self):
@@ -14,6 +15,8 @@ class RagService:
         """
         Starts the RAG workflow for a newly uploaded file.
         """
+
+        
         # Get Temporal client
         temporal_host = config.get("TEMPORAL_HOST")
         temporal_namespace = os.getenv("TEMPORAL_NAMESPACE", "default")

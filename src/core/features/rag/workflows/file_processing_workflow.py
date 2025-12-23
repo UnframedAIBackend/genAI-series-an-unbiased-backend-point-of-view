@@ -2,8 +2,8 @@ from temporalio import workflow
 from datetime import timedelta
 
 with workflow.unsafe.imports_passed_through():
-    from src.core.features.rag.workflows.models import FileProcessingInput, FileProcessingResult
-    from src.core.features.rag.workflows.activities.file_metadata_activity import store_file_metadata
+    from temporalio.common import RetryPolicy
+    from src.core.features.rag.workflows.activities.activity_output import FileProcessingInput, FileProcessingResult
     from src.core.features.rag.workflows.activities.chunking_activity import chunk_file
     from src.core.features.rag.workflows.activities.embedding_activity import generate_embeddings
     from src.core.features.rag.workflows.activities.vector_storage_activity import store_vectors
@@ -16,11 +16,10 @@ class FileProcessingWorkflow:
     Workflow for processing uploaded files through chunking, embedding, and vector storage.
     
     This workflow orchestrates the complete file processing pipeline:
-    1. Store file metadata
-    2. Chunk the file using configured strategy
-    3. Generate embeddings for chunks
-    4. Store vectors in database
-    5. Update processing status
+    1. Chunk the file using configured strategy
+    2. Generate embeddings for chunks
+    3. Store vectors in database
+    4. Update processing status
     """
     
     @workflow.run
@@ -38,65 +37,39 @@ class FileProcessingWorkflow:
         workflow_run_id = workflow.info().run_id
         
         try:
-            # Step 1: Store file metadata with workflow tracking
-            await workflow.execute_activity(
-                store_file_metadata,
-                args=[
-                    input_data.file_id,
-                    input_data.original_filename,
-                    input_data.file_path.split('/')[-1],
-                    input_data.file_path,
-                    0,  # Size will be updated by the activity
-                    workflow_id,
-                    workflow_run_id
-                ],
-                start_to_close_timeout=timedelta(seconds=30),
-                retry_policy=workflow.RetryPolicy(
-                    maximum_attempts=3,
-                    initial_interval=timedelta(seconds=1),
-                    maximum_interval=timedelta(seconds=10)
-                )
-            )
-            
-            # Step 2: Chunk the file
-            chunks = await workflow.execute_activity(
+            chunk_data = await workflow.execute_activity(
                 chunk_file,
-                args=[input_data.file_path, input_data.chunk_strategy],
+                args=[input_data.file_path],
                 start_to_close_timeout=timedelta(minutes=5),
-                retry_policy=workflow.RetryPolicy(
+                retry_policy=RetryPolicy(
                     maximum_attempts=3,
                     initial_interval=timedelta(seconds=2),
                     maximum_interval=timedelta(seconds=30)
                 )
             )
             
-            workflow.logger.info(f"Chunked file into {len(chunks)} chunks")
+            workflow.logger.info(f"Chunked file into {len(chunk_data.chunks)} chunks")
             
-            # Step 3: Generate embeddings
-            embeddings = await workflow.execute_activity(
+            embedding_data = await workflow.execute_activity(
                 generate_embeddings,
-                args=[chunks, input_data.embedding_model],
+                args=[chunk_data],
                 start_to_close_timeout=timedelta(minutes=10),
-                retry_policy=workflow.RetryPolicy(
+                retry_policy=RetryPolicy(
                     maximum_attempts=3,
                     initial_interval=timedelta(seconds=5),
                     maximum_interval=timedelta(minutes=1)
                 )
             )
             
-            workflow.logger.info(f"Generated {len(embeddings)} embeddings")
+            workflow.logger.info(f"Generated {len(embedding_data.embeddings)} embeddings")
             
-            # Step 4: Store vectors in database
             stored_count = await workflow.execute_activity(
                 store_vectors,
                 args=[
-                    embeddings,
-                    input_data.db_engine,
-                    input_data.indexing_strategy,
-                    input_data.file_id
+                    embedding_data,
                 ],
                 start_to_close_timeout=timedelta(minutes=10),
-                retry_policy=workflow.RetryPolicy(
+                retry_policy=RetryPolicy(
                     maximum_attempts=3,
                     initial_interval=timedelta(seconds=5),
                     maximum_interval=timedelta(minutes=1)
@@ -108,9 +81,9 @@ class FileProcessingWorkflow:
             # Step 5: Update status to completed
             await workflow.execute_activity(
                 update_file_status,
-                args=[input_data.file_id, "completed", None],
+                args=[input_data.file_id, FileStatus.COMPLETED, None],
                 start_to_close_timeout=timedelta(seconds=30),
-                retry_policy=workflow.RetryPolicy(
+                retry_policy=RetryPolicy(
                     maximum_attempts=5,
                     initial_interval=timedelta(seconds=1),
                     maximum_interval=timedelta(seconds=10)
@@ -119,28 +92,27 @@ class FileProcessingWorkflow:
             
             return FileProcessingResult(
                 file_id=input_data.file_id,
-                status="completed",
-                chunks_count=len(chunks),
-                embeddings_count=len(embeddings)
+                status=FileStatus.COMPLETED,
+                chunks_count=len(chunk_data.chunks),
+                embeddings_count=len(embeddings.embeddings)
             )
             
         except Exception as e:
             workflow.logger.error(f"Workflow failed: {str(e)}")
             
-            # Update status to failed
             try:
                 await workflow.execute_activity(
                     update_file_status,
-                    args=[input_data.file_id, "failed", str(e)],
+                    args=[input_data.file_id, FileStatus.FAILED, str(e)],
                     start_to_close_timeout=timedelta(seconds=30),
-                    retry_policy=workflow.RetryPolicy(maximum_attempts=3)
+                    retry_policy=RetryPolicy(maximum_attempts=3)
                 )
             except Exception as status_error:
                 workflow.logger.error(f"Failed to update status: {str(status_error)}")
             
             return FileProcessingResult(
                 file_id=input_data.file_id,
-                status="failed",
+                status=FileStatus.FAILED,
                 chunks_count=0,
                 embeddings_count=0,
                 error_message=str(e)
