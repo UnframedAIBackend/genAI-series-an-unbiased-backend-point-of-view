@@ -1,7 +1,7 @@
 import os
-from pathlib import Path
-from typing import Any, Literal, TypedDict, get_args
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Literal, TypedDict
 
 
 class EnvConfig(TypedDict, total=False):
@@ -11,6 +11,7 @@ class EnvConfig(TypedDict, total=False):
     DATABASE_ENGINE: str
     TZ: str
     HF_TOKEN: str
+
 
 @dataclass
 class EnvVarSchema:
@@ -39,6 +40,7 @@ class Configuration:
             "LOG_LEVEL": EnvVarSchema(required=False, type=str, default="INFO"),
             "TEMPORAL_HOST": EnvVarSchema(required=True, type=str),
             "EMBEDDING_MODEL_CHUNK": EnvVarSchema(required=False, type=str, default="all-MiniLM-L6-v2"),
+            "EMBEDDING_MODEL": EnvVarSchema(required=False, type=str, default="vanilla"),
         }
         self._load_env_file()
         self._validate_config()

@@ -1,6 +1,7 @@
+from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
-from dependency_injector.wiring import inject, Provide
 from pydantic import BaseModel
+
 from src.core.container.container import Container
 from src.core.features.rag.rag_controller import RagController
 

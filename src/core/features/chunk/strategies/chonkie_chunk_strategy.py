@@ -1,7 +1,9 @@
 from chonkie import SemanticChunker
 
-from .i_chunk_strategy import IChunkStrategy
 from src.core.configuration.configuration import config
+
+from .i_chunk_strategy import IChunkStrategy
+
 
 class ChonkieChunkStrategy(IChunkStrategy):
     def __init__(self):

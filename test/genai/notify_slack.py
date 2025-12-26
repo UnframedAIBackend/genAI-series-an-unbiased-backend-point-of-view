@@ -1,7 +1,9 @@
-import os
 import json
-import requests
+import os
 import sys
+
+import requests
+
 
 def notify_slack():
     slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
@@ -31,7 +33,7 @@ def notify_slack():
         for m in metrics:
             if m in row:
                 averages[m] += row[m]
-    
+
     msg_blocks = [
         {
             "type": "header",
@@ -64,7 +66,7 @@ def notify_slack():
         })
 
     payload = {"blocks": msg_blocks}
-    
+
     response = requests.post(slack_webhook_url, json=payload)
     if response.status_code != 200:
         print(f"Failed to send Slack notification: {response.status_code} {response.text}")

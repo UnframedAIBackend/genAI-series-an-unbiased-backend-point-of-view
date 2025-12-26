@@ -1,11 +1,9 @@
 import pymongo
 
+
 async def up(db):
-    """
-    Setup file management collection and indexes for MongoDB.
-    """
     collection_name = "file_management"
-    
+
     # Create the collection if it doesn't exist
     collections = await db.list_collection_names()
     if collection_name not in collections:
@@ -14,7 +12,7 @@ async def up(db):
 
     # Create indexes for business logic lookups
     print(f"Creating indexes for collection: {collection_name}")
-    
+
     # 1. Index on workflow_id for fast lookups
     await db[collection_name].create_index(
         [("workflow_id", pymongo.ASCENDING)],

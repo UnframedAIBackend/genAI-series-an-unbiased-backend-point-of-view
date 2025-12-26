@@ -1,7 +1,9 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
 from io import BytesIO
-from src.core.features.file_management.file_management_controller import FileManagementController
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
+
 from src.core.container.container import container
+from src.core.features.file_management.file_management_controller import FileManagementController
 
 
 class FileManagementRestController:

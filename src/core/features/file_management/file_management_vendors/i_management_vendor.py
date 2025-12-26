@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import BinaryIO, Optional
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import BinaryIO, Optional
+
 
 class FileStatus(Enum):
     PENDING = "pending"
     COMPLETED = "completed"
     FAILED = "failed"
+
 
 class FileMetadata:
     id: str
@@ -17,6 +19,7 @@ class FileMetadata:
     uploaded_at: datetime
     status: FileStatus
 
+
 class IManagementVendor(ABC):
     @abstractmethod
     def upload(self, file: BinaryIO, filename: str) -> FileMetadata:
@@ -25,7 +28,7 @@ class IManagementVendor(ABC):
     @abstractmethod
     def get_info(self, file_id: str) -> Optional[FileMetadata]:
         pass
-    
+
     @abstractmethod
-    def get_file(self, file_id: str) -> Optional[bytes]:
+    def get_file_by_path(self, path: str) -> Optional[bytes]:
         pass

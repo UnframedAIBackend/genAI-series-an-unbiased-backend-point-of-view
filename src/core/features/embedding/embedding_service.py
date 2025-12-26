@@ -1,10 +1,10 @@
-from typing import Type, Any
+from typing import Any
 
 from .embedding_models import Embedding
+from .embedding_vendors.colbert_embedding_vendor import ColbertEmbeddingVendor
+from .embedding_vendors.gemma_embedding_vendor import GemmaEmbeddingVendor
 from .embedding_vendors.i_embedding_vendor import IEmbeddingVendor
 from .embedding_vendors.vanilla_embedding_vendor import VanillaEmbeddingVendor
-from .embedding_vendors.gemma_embedding_vendor import GemmaEmbeddingVendor
-from .embedding_vendors.colbert_embedding_vendor import ColbertEmbeddingVendor
 
 
 class EmbeddingService:

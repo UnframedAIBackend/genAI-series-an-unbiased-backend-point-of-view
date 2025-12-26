@@ -1,5 +1,6 @@
 from .frameworks.fastapi.fastapi_server_factory import FastAPIServerFactory
 
+
 class Server:
     servers = {
         "fastapi": FastAPIServerFactory,

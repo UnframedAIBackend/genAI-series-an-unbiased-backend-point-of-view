@@ -1,9 +1,10 @@
-import sys
 import logging
+import sys
 
 from sentence_transformers import SentenceTransformer, models
-from src.core.features.embedding.embedding_models import EMBEDDING_MODEL_MAP
+
 from src.core.configuration.configuration import config
+from src.core.features.embedding.embedding_models import EMBEDDING_MODEL_MAP
 
 log_level = config.get("LOG_LEVEL").upper()
 logging.basicConfig(level=getattr(logging, log_level))
@@ -17,7 +18,7 @@ def preload():
         print(f"Downloading {key}: {model_id}...")
         try:
             if "colbert" in model_id.lower():
-                print(f"  - Initializing as explicit Transformer module...")
+                print("  - Initializing as explicit Transformer module...")
                 word_embedding_model = models.Transformer(model_id, model_args={"token": token})
                 SentenceTransformer(modules=[word_embedding_model])
             else:

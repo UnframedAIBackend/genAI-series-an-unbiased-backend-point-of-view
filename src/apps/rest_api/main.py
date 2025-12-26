@@ -1,6 +1,7 @@
 import uvicorn
-from src.core.configuration.configuration import config
+
 from src.apps.rest_api.frameworks.fastapi.fastapi_server_factory import FastAPIServerFactory
+from src.core.configuration.configuration import config
 
 factory = FastAPIServerFactory()
 server = factory.create()
@@ -19,9 +20,9 @@ if __name__ == "__main__":
 
     port = config.get("PORT")
     env = config.get("NODE_ENV")
-    
+
     reload = env == "development"
-    
+
     try:
         uvicorn.run(
             "src.apps.rest_api.main:app",

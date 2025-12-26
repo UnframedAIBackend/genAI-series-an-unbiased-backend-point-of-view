@@ -1,15 +1,15 @@
 import os
+
 import mlflow
-import pandas as pd
+from datasets import Dataset
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from ragas import evaluate
 from ragas.metrics import (
+    answer_relevancy,
     context_precision,
     context_recall,
     faithfulness,
-    answer_relevancy,
 )
-from datasets import Dataset
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 # Configuration for Local LLM (Self-contained)
 # We use LiteLLM (running on port 4000) which proxies to our local Ollama instance.
@@ -72,7 +72,7 @@ def run_evaluation():
 
     with mlflow.start_run():
         mlflow.log_param("model", "tinyllama-local")
-        
+
         print("Starting Ragas evaluation...")
         results = evaluate(
             dataset=dataset,
@@ -85,7 +85,7 @@ def run_evaluation():
             llm=llm,
             embeddings=embeddings
         )
-        
+
         # Log Metrics
         print("Evaluation Result:", results)
         for metric, value in results.items():

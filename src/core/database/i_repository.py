@@ -1,39 +1,40 @@
-from typing import Protocol, TypeVar, Optional, List, Any
 from abc import ABC, abstractmethod
+from typing import Any, Generic, List, Optional, TypeVar, Union
 
-from src.database.database_engine import DatabaseEngine
-from src.database.mongodb_repository import MongoDBRepository
-from src.database.postgresql_repository import PostgreSQLRepository
-
+from src.core.configuration.configuration import config
+from src.core.database.database_engine import DatabaseEngine
+from src.core.database.repository_registry import repository_registry
 
 T = TypeVar("T")
 
-@abstractmethod
-class IRepository(ABC):
 
-    def __init__(self, identifier: str):
-        self.__engines: dict[str, Type[DatabaseEngine]] = {
-            DatabaseEngine.NOSQL: MongoDBRepository(identifier),
-            DatabaseEngine.SQL: PostgreSQLRepository(identifier),
-        }
+class IRepository(ABC, Generic[T]):
+    def _get_engine(self, identifier: str) -> Any:
+        engine_type = config.get("DATABASE_ENGINE")
 
-    def _get_engine(self, engine: DatabaseEngine) -> Type[DatabaseEngine]:
-        return self.__engines.get(engine)
+        if engine_type == DatabaseEngine.NOSQL:
+            repo_class = repository_registry.get(DatabaseEngine.NOSQL)
+            return repo_class(identifier)
+        elif engine_type == DatabaseEngine.SQL:
+            repo_class = repository_registry.get(DatabaseEngine.SQL)
+            return repo_class(identifier)
+
+        raise ValueError(f"Unsupported database engine: {engine_type}")
 
     @abstractmethod
-    async def find_by_id(self, id: int | str) -> Optional[T]: ...
-    
+    async def find_by_id(self, id: Union[int, str]) -> Optional[T]: ...
+
     @abstractmethod
     async def find_all(self) -> List[T]: ...
-    
+
     @abstractmethod
     async def create(self, data: Any) -> T: ...
 
     @abstractmethod
     async def create_many(self, data: List[Any]) -> List[T]: ...
-    
+
     @abstractmethod
-    async def update(self, id: int | str, data: Any) -> Optional[T]: ...
-    
+    async def update(self, id: Union[int, str], data: Any) -> Optional[T]: ...
+
     @abstractmethod
-    async def delete(self, id: int | str) -> bool: ...
+    async def delete(self, id: Union[int, str]) -> bool: ...

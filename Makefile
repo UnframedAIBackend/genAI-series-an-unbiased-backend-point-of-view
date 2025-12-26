@@ -1,7 +1,7 @@
 PORT ?= 8000
 WORKERS ?= 4
 
-.PHONY: help up down restart logs clean install-deps rag-worker build dev infra migrate-sql migrate-nosql
+.PHONY: help up down restart logs clean install-deps rag-worker build dev infra migrate-sql migrate-nosql lint lint-fix
 
 help:
 	@echo "Available commands:"
@@ -23,6 +23,8 @@ help:
 	@echo "  make shell-worker    - Shell into worker container"
 	@echo "  make migrate-sql     - Migrate SQL database"
 	@echo "  make migrate-nosql   - Migrate NoSQL database"
+	@echo "  make lint            - Run Ruff linter"
+	@echo "  make lint-fix        - Run Ruff and fix safe issues"
 
 build:
 	docker compose build
@@ -69,6 +71,12 @@ migrate-sql:
 
 migrate-nosql:
 	python src/core/database/nosql/migrate.py
+
+lint:
+	uv run ruff check .
+
+lint-fix:
+	uv run ruff check --fix .
 
 api:
 	python -m uvicorn src.apps.rest_api.main:app --host 0.0.0.0 --port $(PORT) --reload

@@ -1,8 +1,9 @@
-from typing import List
 import logging
+from typing import List
 
-from src.core.features.vector_store.vector_store_repository import VectorStoreRepository
 from src.core.features.vector_store.vector_store_entity import VectorEntity
+from src.core.features.vector_store.vector_store_repository import VectorStoreRepository
+
 
 class VectorStoreService:
     def __init__(self, repository: VectorStoreRepository):

@@ -1,6 +1,8 @@
 import asyncio
 from pathlib import Path
+
 import asyncpg
+
 from src.core.configuration.configuration import config
 
 
@@ -8,7 +10,7 @@ class SQLMigrate:
     def __init__(self):
         self.migrations_dir = Path("src/database/sql/migrations")
         self.database_url = config.get("DATABASE_URL").replace("+asyncpg", "")
-    
+
     async def run(self) -> None:
         db_engine = config.get("DATABASE_ENGINE")
         if db_engine not in ["postgres", "sql"]:
@@ -16,11 +18,11 @@ class SQLMigrate:
             return
 
         print("Running migrations...")
-        
+
         if not self.migrations_dir.exists():
             print(f"Migrations directory not found: {self.migrations_dir}")
             return
-        
+
         conn = await asyncpg.connect(self.database_url)
         try:
             for file in sorted(self.migrations_dir.glob("*.sql")):

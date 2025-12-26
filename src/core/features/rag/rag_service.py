@@ -1,10 +1,10 @@
 import os
-from typing import List, Dict
+from typing import Dict, List
 
 from src.core.configuration.configuration import config
-from src.core.features.rag.workflows.temporal_client import TemporalClientSingleton
 from src.core.features.rag.workflows.activities.activity_output import FileProcessingInput
-from src.core.features.rag.workflows.file_processing_workflow import FileProcessingWorkflow
+from src.core.features.rag.workflows.temporal_client import TemporalClientSingleton
+
 
 class RagService:
     def __init__(self):
@@ -16,7 +16,6 @@ class RagService:
         Starts the RAG workflow for a newly uploaded file.
         """
 
-        
         # Get Temporal client
         temporal_host = config.get("TEMPORAL_HOST")
         temporal_namespace = os.getenv("TEMPORAL_NAMESPACE", "default")
@@ -28,7 +27,7 @@ class RagService:
             file_path=file_metadata['path'],
             original_filename=file_metadata['original_filename'],
             chunk_strategy=os.getenv("CHUNK_STRATEGY", "semantic"),
-            embedding_model=config.get("EMBEDDING_MODEL"),
+            embedding_model=config.get("EMBEDDING_MODEL_CHUNK"),
             db_engine=config.get("DATABASE_ENGINE"),
             indexing_strategy=os.getenv("INDEXING_STRATEGY", "hnsw")
         )
@@ -36,7 +35,7 @@ class RagService:
         # Start workflow
         task_queue = os.getenv("TEMPORAL_TASK_QUEUE", "file-processing-queue")
         workflow_handle = await client.start_workflow(
-            FileProcessingWorkflow.run,
+            "FileProcessingWorkflow",
             workflow_input,
             id=f"file-processing-{file_metadata['id']}",
             task_queue=task_queue

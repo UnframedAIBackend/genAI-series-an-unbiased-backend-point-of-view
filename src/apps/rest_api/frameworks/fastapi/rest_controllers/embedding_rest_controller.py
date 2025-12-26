@@ -1,13 +1,12 @@
 from typing import Any
-from fastapi import APIRouter
+
+from fastapi import APIRouter, Path
 from pydantic import BaseModel
 
 from src.core.container.container import container
 from src.core.features.embedding.embedding_controller import EmbeddingController
 from src.core.features.embedding.embedding_models import Embedding
 
-
-from fastapi import APIRouter, Path
 
 # Removing model_id from request body
 class EmbeddingRequest(BaseModel):
@@ -25,7 +24,7 @@ class EmbeddingRestController:
         self.embedding_controller: EmbeddingController = container.embedding_controller()
         self.router = APIRouter(prefix="/embedding", tags=["embedding"])
         self._setup_routes()
-    
+
     def _setup_routes(self):
         self.router.add_api_route(
             "/{model_id}/generate",
@@ -35,7 +34,7 @@ class EmbeddingRestController:
         )
 
     async def generate_embeddings(
-        self, 
+        self,
         request: EmbeddingRequest,
         model_id: Embedding = Path(..., description="Embedding model to use")
     ) -> EmbeddingResponse:

@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException, Path
+
 from src.core.container.container import container
-from src.core.features.chunk.chunk_strategy_controller import ChunkStrategyController
 from src.core.features.chunk.chunk_strategy import ChunkStrategy
+from src.core.features.chunk.chunk_strategy_controller import ChunkStrategyController
 
 
 class ChunkStrategyRestController:
     def __init__(self) -> None:
         self.chunk_strategy_controller: ChunkStrategyController = container.chunk_strategy_controller()
-        
+
         self.router = APIRouter(prefix="/chunk", tags=["chunking"])
         self._setup_routes()
 

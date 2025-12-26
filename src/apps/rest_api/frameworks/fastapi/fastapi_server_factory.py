@@ -1,8 +1,9 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
 from .route import router as api_router
+
 
 class FastAPIServerFactory:
     @staticmethod

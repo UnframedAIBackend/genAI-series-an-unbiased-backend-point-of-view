@@ -1,7 +1,9 @@
 import asyncio
-from importlib.util import spec_from_file_location, module_from_spec
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+
 from pymongo import AsyncMongoClient
+
 from src.core.configuration.configuration import config
 
 
@@ -10,7 +12,7 @@ class NoSQLMigrate:
         self.migrations_dir = Path("src/core/database/nosql/migrations")
         self.database_url = config.get("DATABASE_URL")
         print(self.database_url)
-    
+
     async def run(self) -> None:
         db_engine = config.get("DATABASE_ENGINE")
         if db_engine not in ["mongodb", "nosql"]:
@@ -18,11 +20,11 @@ class NoSQLMigrate:
             return
 
         print("Running NoSQL migrations...")
-        
+
         if not self.migrations_dir.exists():
             print(f"Migrations directory not found: {self.migrations_dir}")
             return
-        
+
         client = AsyncMongoClient(self.database_url)
         try:
             db = client.get_database()

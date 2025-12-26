@@ -1,9 +1,9 @@
 import hashlib
+from datetime import datetime
 from pathlib import Path
 from typing import BinaryIO, Optional
-from datetime import datetime
 
-from .i_management_vendor import IManagementVendor, FileMetadata, FileStatus
+from .i_management_vendor import FileMetadata, FileStatus, IManagementVendor
 
 
 class LocalManagementVendor(IManagementVendor):
@@ -21,17 +21,17 @@ class LocalManagementVendor(IManagementVendor):
         hashed_filename = f"{file_hash}{file_extension}"
         destination_path = self.base_path / hashed_filename
 
-        with open(destination_path, 'wb') as dest_file:
+        with open(destination_path, "wb") as dest_file:
             dest_file.write(content)
 
         metadata = {
             "id": file_hash,
             "original_filename": filename,
             "stored_filename": hashed_filename,
-            "path": str(destination_path.absolute()),
+            "path": hashed_filename,
             "size": len(content),
             "uploaded_at": datetime.now().isoformat(),
-            "status": FileStatus.PENDING
+            "status": FileStatus.PENDING,
         }
 
         self.metadata_store[file_hash] = metadata
@@ -46,6 +46,13 @@ class LocalManagementVendor(IManagementVendor):
         """Retrieve file content by ID (hash)."""
         metadata = self.get_info(file_id)
         if metadata:
-            with open(metadata['path'], 'rb') as file:
-                return file.read()
+            return self.get_file_by_path(metadata["path"])
         return None
+
+    def get_file_by_path(self, path: str) -> Optional[bytes]:
+        """Retrieve file content by absolute path."""
+        try:
+            with open(path, "rb") as file:
+                return file.read()
+        except Exception:
+            return None
