@@ -26,21 +26,23 @@ class Configuration:
     def __init__(self) -> None:
         self._config: dict[str, Any] = {}
         self._env_schema: dict[str, EnvVarSchema] = {
+            "DATABASE_URL": EnvVarSchema(required=True, type=str),
+            "HF_TOKEN": EnvVarSchema(required=True, type=str),
+            "TEMPORAL_HOST": EnvVarSchema(required=True, type=str),
+            "CHUNK_OVERLAP": EnvVarSchema(required=False, type=int, default=200),
+            "CHUNK_SIZE": EnvVarSchema(required=False, type=int, default=2048),
+            "CHUNK_STRATEGY": EnvVarSchema(required=False, type=str, default="vanilla"),
+            "DATABASE_ENGINE": EnvVarSchema(required=False, type=str, default="mongodb"),
+            "EMBEDDING_MODEL": EnvVarSchema(required=False, type=str, default="vanilla"),
+            "EMBEDDING_MODEL_CHUNK": EnvVarSchema(required=False, type=str, default="all-MiniLM-L6-v2"),
+            "FILE_STORAGE_VENDOR": EnvVarSchema(required=False, type=str, default="local"),
+            "LOG_LEVEL": EnvVarSchema(required=False, type=str, default="INFO"),
             "NODE_ENV": EnvVarSchema(required=False, type=str, default="development"),
             "PORT": EnvVarSchema(required=False, type=int, default=8000),
-            "DATABASE_URL": EnvVarSchema(required=True, type=str),
-            "DATABASE_ENGINE": EnvVarSchema(required=False, type=str, default="mongodb"),
-            "UPLOADS_PATH": EnvVarSchema(required=False, type=str, default="uploads"),
-            "FILE_STORAGE_VENDOR": EnvVarSchema(required=False, type=str, default="local"),
-            "CHUNK_SIZE": EnvVarSchema(required=False, type=int, default=2048),
-            "CHUNK_OVERLAP": EnvVarSchema(required=False, type=int, default=200),
-            "CHUNK_STRATEGY": EnvVarSchema(required=False, type=str, default="vanilla"),
+            "TEMPORAL_NAMESPACE": EnvVarSchema(required=False, type=str, default="default"),
+            "TEMPORAL_TASK_QUEUE": EnvVarSchema(required=False, type=str, default="file-processing-queue"),
             "TZ": EnvVarSchema(required=False, type=str, default="America/Bogota"),
-            "HF_TOKEN": EnvVarSchema(required=True, type=str),
-            "LOG_LEVEL": EnvVarSchema(required=False, type=str, default="INFO"),
-            "TEMPORAL_HOST": EnvVarSchema(required=True, type=str),
-            "EMBEDDING_MODEL_CHUNK": EnvVarSchema(required=False, type=str, default="all-MiniLM-L6-v2"),
-            "EMBEDDING_MODEL": EnvVarSchema(required=False, type=str, default="vanilla"),
+            "UPLOADS_PATH": EnvVarSchema(required=False, type=str, default="uploads"),
         }
         self._load_env_file()
         self._validate_config()
@@ -75,12 +77,12 @@ class Configuration:
             raise ValueError(f"Missing required environment variables: {', '.join(missing_required)}")
 
     def _parse_value(self, value: str, value_type: type) -> Any:
-        if value_type == int:
+        if value_type is int:
             try:
                 return int(value)
             except ValueError:
                 raise ValueError(f"Invalid number value: {value}")
-        if value_type == bool:
+        if value_type is bool:
             return value.lower() in ("true", "1", "yes")
         return value
 

@@ -5,8 +5,8 @@ from typing import Any, List, Optional, TypeVar
 from bson import ObjectId
 from pymongo import AsyncMongoClient
 
-from src.core.database.database_engine import DatabaseEngine
 from src.core.configuration.configuration import config
+from src.core.database.database_engine import DatabaseEngine
 from src.core.database.i_repository import IRepository
 from src.core.database.repository_registry import repository_registry
 

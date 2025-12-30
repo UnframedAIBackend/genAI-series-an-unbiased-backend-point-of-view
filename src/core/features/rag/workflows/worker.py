@@ -1,5 +1,5 @@
 import asyncio
-import os
+import logging as std_logging
 
 from temporalio.client import Client
 from temporalio.worker import Worker
@@ -15,37 +15,28 @@ from src.core.features.rag.workflows.file_processing_workflow import FileProcess
 async def main():
     """Start the Temporal worker"""
 
-    # Get configuration from environment
+    # Configure logging to output to stdout
+    std_logging.basicConfig(level=std_logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
     temporal_host = config.get("TEMPORAL_HOST")
-    temporal_namespace = os.getenv("TEMPORAL_NAMESPACE", "default")
-    task_queue = os.getenv("TEMPORAL_TASK_QUEUE", "file-processing-queue")
+    temporal_namespace = config.get("TEMPORAL_NAMESPACE")
+    task_queue = config.get("TEMPORAL_TASK_QUEUE")
 
     print(f"Connecting to Temporal at {temporal_host}")
 
-    # Connect to Temporal
     client = await Client.connect(temporal_host, namespace=temporal_namespace)
 
-    print(f"Starting worker on task queue: {task_queue}")
-
-    # Create worker
     worker = Worker(
         client,
         task_queue=task_queue,
         workflows=[FileProcessingWorkflow],
-        activities=[
-            chunk_file,
-            generate_embeddings,
-            store_vectors,
-            update_file_status
-        ],
+        activities=[chunk_file, generate_embeddings, store_vectors, update_file_status],
         max_concurrent_activities=10,
-        max_concurrent_workflow_tasks=10
+        max_concurrent_workflow_tasks=10,
     )
 
-    print("Worker started successfully")
     print("Listening for workflow and activity tasks...")
 
-    # Run the worker
     await worker.run()
 
 

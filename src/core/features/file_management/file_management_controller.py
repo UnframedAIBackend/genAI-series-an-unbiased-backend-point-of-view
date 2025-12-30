@@ -2,6 +2,7 @@ import json
 import logging
 from typing import BinaryIO, Optional
 
+from src.core.configuration.configuration import config
 from src.core.features.file_management.file_management_repository import FileManagementRepository
 from src.core.features.rag.rag_service import RagService
 
@@ -22,11 +23,15 @@ class FileManagementController:
 
     async def upload_file(self, file: BinaryIO, filename: str) -> FileMetadata:
         file_metadata = self.file_management_service.upload(file, filename)
+        file_metadata_dict = {**file_metadata, "status": file_metadata["status"].value}
+        workflow_info = await self.rag_service.start_file_processing(file_metadata_dict)
 
-        workflow_info = await self.rag_service.start_file_processing(file_metadata)
         logging.info(f"RAG workflow started for file {json.dumps(workflow_info)}")
 
-        self.repository.create(file_metadata)
+        try:
+            await self.repository.create(file_metadata_dict)
+        except Exception as db_error:
+            print("Failed to save file metadata to database: ", db_error)
 
         return file_metadata
 

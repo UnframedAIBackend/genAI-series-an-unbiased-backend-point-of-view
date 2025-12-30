@@ -18,33 +18,27 @@ class RagService:
 
         # Get Temporal client
         temporal_host = config.get("TEMPORAL_HOST")
-        temporal_namespace = os.getenv("TEMPORAL_NAMESPACE", "default")
+        temporal_namespace = config.get("TEMPORAL_NAMESPACE")
         client = await TemporalClientSingleton.get_client(temporal_host, temporal_namespace)
 
         # Prepare workflow input
         workflow_input = FileProcessingInput(
-            file_id=file_metadata['id'],
-            file_path=file_metadata['path'],
-            original_filename=file_metadata['original_filename'],
-            chunk_strategy=os.getenv("CHUNK_STRATEGY", "semantic"),
+            file_id=file_metadata["id"],
+            file_path=file_metadata["path"],
+            original_filename=file_metadata["original_filename"],
+            chunk_strategy=config.get("CHUNK_STRATEGY"),
             embedding_model=config.get("EMBEDDING_MODEL_CHUNK"),
             db_engine=config.get("DATABASE_ENGINE"),
-            indexing_strategy=os.getenv("INDEXING_STRATEGY", "hnsw")
+            indexing_strategy=os.getenv("INDEXING_STRATEGY", "hnsw"),
         )
 
         # Start workflow
         task_queue = os.getenv("TEMPORAL_TASK_QUEUE", "file-processing-queue")
         workflow_handle = await client.start_workflow(
-            "FileProcessingWorkflow",
-            workflow_input,
-            id=f"file-processing-{file_metadata['id']}",
-            task_queue=task_queue
+            "FileProcessingWorkflow", workflow_input, id=f"file-processing-{file_metadata['id']}", task_queue=task_queue
         )
 
-        return {
-            'workflow_id': workflow_handle.id,
-            'workflow_run_id': workflow_handle.result_run_id
-        }
+        return {"workflow_id": workflow_handle.id, "workflow_run_id": workflow_handle.result_run_id}
 
     def retrieve(self, query: str, limit: int = 5) -> List[Dict]:
         """
@@ -54,7 +48,7 @@ class RagService:
         # Placeholder for vector search logic
         return [
             {"content": "Vector databases speed up similarity search.", "score": 0.95},
-            {"content": "RAG combines retrieval and generation.", "score": 0.90}
+            {"content": "RAG combines retrieval and generation.", "score": 0.90},
         ]
 
     def generate(self, context: List[Dict], query: str) -> str:

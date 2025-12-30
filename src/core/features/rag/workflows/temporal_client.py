@@ -9,7 +9,7 @@ class TemporalClientSingleton:
     _instance: Optional[Client] = None
 
     @classmethod
-    async def get_client(cls, host: str = "localhost:7233", namespace: str = "default") -> Client:
+    async def get_client(cls, host: str, namespace: str) -> Client:
         """Get or create Temporal client instance"""
         if cls._instance is None:
             cls._instance = await Client.connect(host, namespace=namespace)

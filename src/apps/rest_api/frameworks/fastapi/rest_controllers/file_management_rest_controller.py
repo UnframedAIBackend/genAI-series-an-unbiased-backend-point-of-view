@@ -32,18 +32,14 @@ class FileManagementRestController:
         try:
             content = await file.read()
             file_obj = BytesIO(content)
-
-            metadata = await self.file_management_controller.upload_file(
-                file_obj,
-                file.filename or "unknown"
-            )
+            metadata = await self.file_management_controller.upload_file(file_obj, file.filename)
 
             return {
                 "message": "File uploaded successfully",
                 "file_id": metadata["id"],
                 "filename": metadata["original_filename"],
                 "size": metadata["size"],
-                "uploaded_at": metadata["uploaded_at"]
+                "uploaded_at": metadata["uploaded_at"],
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")

@@ -150,6 +150,8 @@ services:
     env_file: .env
     environment:
       - TEMPORAL_HOST=temporal:7233
+      - DATABASE_URL=mongodb://mongo:mongo@mongodb:27017/mongo?authSource=admin&replicaSet=rs0
+      - DATABASE_ENGINE=mongodb
     healthcheck:
       test: [ "CMD-SHELL", "pgrep -f 'python.*worker.py' > /dev/null || exit 1" ]
       interval: 30s
