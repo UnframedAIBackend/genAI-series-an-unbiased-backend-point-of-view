@@ -2,14 +2,24 @@ import os
 from typing import Dict, List
 
 from src.core.configuration.configuration import config
+from src.core.features.embedding.embedding_models import Embedding
+from src.core.features.embedding.embedding_service import EmbeddingService
+from src.core.features.llm.llm_service import LlmService
 from src.core.features.rag.workflows.activities.activity_output import FileProcessingInput
 from src.core.features.rag.workflows.temporal_client import TemporalClientSingleton
+from src.core.features.vector_store.vector_store_service import VectorStoreService
 
 
 class RagService:
-    def __init__(self):
-        # In a real implementation, you would inject a Repository here
-        pass
+    def __init__(
+        self,
+        vector_store_service: VectorStoreService,
+        embedding_service: EmbeddingService,
+        llm_service: LlmService,
+    ):
+        self.vector_store_service = vector_store_service
+        self.embedding_service = embedding_service
+        self.llm_service = llm_service
 
     async def start_file_processing(self, file_metadata: dict) -> dict:
         """
@@ -40,21 +50,39 @@ class RagService:
 
         return {"workflow_id": workflow_handle.id, "workflow_run_id": workflow_handle.result_run_id}
 
-    def retrieve(self, query: str, limit: int = 5) -> List[Dict]:
+    async def retrieve(self, query: str, limit: int = 5) -> List[Dict]:
         """
         Retrieves relevant documents based on the query.
-        For this series, this connects to our Vector Store (Postgres/Mongo).
         """
-        # Placeholder for vector search logic
-        return [
-            {"content": "Vector databases speed up similarity search.", "score": 0.95},
-            {"content": "RAG combines retrieval and generation.", "score": 0.90},
-        ]
+        embedding_model = config.get("EMBEDDING_MODEL")
+        model_enum = Embedding(embedding_model) if isinstance(embedding_model, str) else embedding_model
+
+        query_vectors = self.embedding_service.generate(model_enum, [query])
+
+        if not query_vectors:
+            return []
+
+        return await self.vector_store_service.search(query_vectors[0], limit=limit)
 
     def generate(self, context: List[Dict], query: str) -> str:
         """
         Generates an answer using the LLM and the provided context.
         """
-        # Placeholder for LLM generation (connect to LiteLLM/Ollama)
-        context_str = "\n".join([c["content"] for c in context])
-        return f"Answer based on context: {context_str}"
+        context_text = "\n\n".join(
+            [f"--- Context {i + 1} (Score: {c.get('score', 0):.4f}) ---\n{c['content']}" for i, c in enumerate(context)]
+        )
+
+        print("context_text", context_text)
+
+        augmented_prompt = f"""
+You are a helpful assistant. Answer the question based ONLY on the following context.
+If the answer is not in the context, say that you don't know.
+
+Context:
+{context_text}
+
+Question: {query}
+
+Answer:"""
+
+        return self.llm_service.generate(augmented_prompt)

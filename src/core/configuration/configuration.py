@@ -43,6 +43,8 @@ class Configuration:
             "TEMPORAL_TASK_QUEUE": EnvVarSchema(required=False, type=str, default="file-processing-queue"),
             "TZ": EnvVarSchema(required=False, type=str, default="America/Bogota"),
             "UPLOADS_PATH": EnvVarSchema(required=False, type=str, default="uploads"),
+            "OLLAMA_HOST": EnvVarSchema(required=False, type=str, default="http://localhost:11434"),
+            "GENERATION_MODEL": EnvVarSchema(required=False, type=str, default="ollama/tinyllama"),
         }
         self._load_env_file()
         self._validate_config()

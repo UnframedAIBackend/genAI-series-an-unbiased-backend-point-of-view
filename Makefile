@@ -1,3 +1,4 @@
+COMPOSE ?= docker compose
 PORT ?= 8000
 WORKERS ?= 4
 
@@ -27,13 +28,13 @@ help:
 	@echo "  make lint-fix        - Run Ruff and fix safe issues"
 
 build:
-	docker compose build
+	$(COMPOSE) build
 
 up:
-	docker compose --profile app up -d
+	$(COMPOSE) --profile app up -d
 
 docker-up:
-	docker compose up --build -d postgres mongodb ollama mlflow temporal temporal-ui rag-worker mongo_migrator postgres_migrator
+	$(COMPOSE) up --build -d postgres mongodb ollama mlflow temporal temporal-ui rag-worker mongo_migrator postgres_migrator
 
 preload:
 	uv run python src/scripts/preload.py
@@ -42,22 +43,22 @@ dev: preload docker-up
 	uv run python src/apps/rest_api/main.py
 
 down:
-	docker compose down
+	$(COMPOSE) down
 
 restart:
-	docker compose restart
+	$(COMPOSE) restart
 
 logs:
-	docker compose logs -f
+	$(COMPOSE) logs -f
 
 logs-api:
-	docker compose logs -f api
+	$(COMPOSE) logs -f api
 
 logs-worker:
-	docker compose logs -f rag-worker
+	$(COMPOSE) logs -f rag-worker
 
 clean:
-	docker compose down -v
+	$(COMPOSE) down -v
 	docker system prune -f
 
 install-deps:
@@ -88,4 +89,4 @@ temporal-ui:
 	open http://localhost:8080
 
 shell-api:
-	docker compose exec api /bin/bash
+	$(COMPOSE) exec api /bin/bash

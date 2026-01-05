@@ -1,15 +1,17 @@
 from typing import List, Optional, Union
 
-from src.core.database.i_repository import IRepository
+from src.core.database.i_repository import IVectorRepository
+from src.core.database.nosql.nosql_vector_repository import NoSQLVectorRepository  # noqa: F401
+from src.core.database.sql.sql_vector_repository import SQLVectorRepository  # noqa: F401
 from src.core.features.vector_store.vector_store_entity import VectorEntity
 
 
-class VectorStoreRepository(IRepository[VectorEntity]):
+class VectorStoreRepository(IVectorRepository[VectorEntity]):
     __IDENTIFIER: str = "vector_store"
-    __repository: IRepository
+    __repository: IVectorRepository
 
     def __init__(self):
-        self.__repository = self._get_engine(self.__IDENTIFIER)
+        self.__repository = self._get_engine(self.__IDENTIFIER, is_vector=True)
 
     async def find_by_id(self, id: Union[int, str]) -> Optional[VectorEntity]:
         return await self.__repository.find_by_id(id)
@@ -28,3 +30,6 @@ class VectorStoreRepository(IRepository[VectorEntity]):
 
     async def delete(self, id: Union[int, str]) -> bool:
         return await self.__repository.delete(id)
+
+    async def similarity_search(self, query_vector: List[float], limit: int = 5) -> List[dict]:
+        return await self.__repository.similarity_search(query_vector, limit)

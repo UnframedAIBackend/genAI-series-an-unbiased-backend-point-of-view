@@ -14,7 +14,8 @@ async def update_file_status(file_id: str, status: str, error_message: Optional[
 
     file_record = await file_management_repository.find_by_id(file_id)
     if file_record:
-        file_record.status = status
+        file_record["status"] = status
         await file_management_repository.update(file_id, file_record)
-
-    activity.logger.info(f"Updated file {file_id} status to {status}")
+        activity.logger.info(f"Updated file {file_id} status to {status}")
+    else:
+        activity.logger.warning(f"File record with id {file_id} not found. Status update to {status} failed.")

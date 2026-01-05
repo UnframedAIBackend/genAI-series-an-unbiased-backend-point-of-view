@@ -1,13 +1,13 @@
 from dataclasses import asdict, is_dataclass
-from typing import Any, List, Optional, TypeVar, Union
+from typing import Any, List, Optional, TypeVar
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from src.core.configuration.configuration import config
+from src.core.database.database_engine import DatabaseEngine
 from src.core.database.i_repository import IRepository
 from src.core.database.repository_registry import repository_registry
-from src.core.database.database_engine import DatabaseEngine
 
 T = TypeVar("T")
 

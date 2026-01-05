@@ -32,7 +32,7 @@ class NoSQLRepository(IRepository[T]):
     async def create_many(self, data: List[Any]) -> List[Any]:
         docs = [asdict(item) if is_dataclass(item) else dict(item) for item in data]
 
-        result = await self.collection.insert_many(docs)
+        await self.collection.insert_many(docs)
         for doc in docs:
             if "_id" in doc:
                 doc["id"] = str(doc.pop("_id"))
@@ -46,26 +46,42 @@ class NoSQLRepository(IRepository[T]):
         return results
 
     async def find_by_id(self, id: str) -> Optional[dict]:
+        document = None
         try:
             document = await self.collection.find_one({"_id": ObjectId(id)})
         except Exception:
-            return None
+            # If id is not a valid ObjectId, try finding by "id" field
+            pass
+
+        if not document:
+            document = await self.collection.find_one({"id": id})
 
         if document:
-            document["id"] = str(document.pop("_id"))
+            if "_id" in document:
+                document["id"] = str(document.pop("_id"))
             return document
         return None
 
     async def update(self, id: str, data: dict) -> Optional[dict]:
+        query = {}
         try:
-            object_id = ObjectId(id)
+            query = {"_id": ObjectId(id)}
         except Exception:
-            return None
+            # If id is not a valid ObjectId, assume it's a custom id field
+            query = {"id": id}
 
         data["updated_at"] = datetime.now()
-        result = await self.collection.find_one_and_update({"_id": object_id}, {"$set": data}, return_document=True)
+
+        # Try updating
+        result = await self.collection.find_one_and_update(query, {"$set": data}, return_document=True)
+
+        # If unexpected failure with ObjectId, try fallback to custom id (if we originally tried ObjectId)
+        if not result and "_id" in query:
+            result = await self.collection.find_one_and_update({"id": id}, {"$set": data}, return_document=True)
+
         if result:
-            result["id"] = str(result.pop("_id"))
+            if "_id" in result:
+                result["id"] = str(result.pop("_id"))
             return result
         return None
 

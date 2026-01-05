@@ -9,6 +9,7 @@ from src.core.features.embedding.embedding_service import EmbeddingService
 from src.core.features.file_management.file_management_controller import FileManagementController
 from src.core.features.file_management.file_management_repository import FileManagementRepository
 from src.core.features.file_management.file_management_service import FileManagementService
+from src.core.features.llm.llm_service import LlmService
 from src.core.features.rag.rag_controller import RagController
 from src.core.features.rag.rag_service import RagService
 from src.core.features.vector_store.vector_store_repository import VectorStoreRepository
@@ -23,7 +24,16 @@ class Container(containers.DeclarativeContainer):
 
     vector_store_service = providers.Factory(VectorStoreService, repository=vector_store_repository)
 
-    rag_service = providers.Singleton(RagService)
+    llm_service = providers.Singleton(LlmService)
+
+    embedding_service = providers.Singleton(EmbeddingService)
+
+    rag_service = providers.Singleton(
+        RagService,
+        vector_store_service=vector_store_service,
+        embedding_service=embedding_service,
+        llm_service=llm_service,
+    )
 
     file_management_controller = providers.Factory(
         FileManagementController,
@@ -39,8 +49,6 @@ class Container(containers.DeclarativeContainer):
         chunk_strategy_service=chunk_strategy_service,
         file_management_service=file_management_service,
     )
-
-    embedding_service = providers.Singleton(EmbeddingService)
 
     embedding_controller = providers.Factory(EmbeddingController, embedding_service=embedding_service)
 

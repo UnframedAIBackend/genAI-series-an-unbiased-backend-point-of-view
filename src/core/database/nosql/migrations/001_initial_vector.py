@@ -1,7 +1,5 @@
-
 async def up(db):
-
-    collection_name = "embeddings"
+    collection_name = "vector_store"
 
     collections = await db.list_collection_names()
     if collection_name not in collections:
@@ -17,15 +15,9 @@ async def up(db):
         "definition": {
             "mappings": {
                 "dynamic": True,
-                "fields": {
-                    "embedding": {
-                        "dimensions": 384,
-                        "similarity": "cosine",
-                        "type": "knnVector"
-                    }
-                }
+                "fields": {"embedding": {"dimensions": 384, "similarity": "cosine", "type": "knnVector"}},
             }
-        }
+        },
     }
 
     try:
@@ -34,6 +26,7 @@ async def up(db):
     except Exception:
         await db[collection_name].create_index([("embedding", 1)], name="idx_embeddings_fallback")
         print("✓ Standard fallback index created")
+
 
 async def down(db):
     await db.drop_collection("embeddings")

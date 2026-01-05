@@ -2,24 +2,18 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, List, Optional, TypeVar, Union
 
 from src.core.configuration.configuration import config
-from src.core.database.database_engine import DatabaseEngine
 from src.core.database.repository_registry import repository_registry
 
 T = TypeVar("T")
 
 
 class IRepository(ABC, Generic[T]):
-    def _get_engine(self, identifier: str) -> Any:
+    def _get_engine(self, identifier: str, is_vector: bool = False) -> Any:
         engine_type = config.get("DATABASE_ENGINE")
+        key = f"{engine_type}_vector" if is_vector else engine_type
 
-        if engine_type == DatabaseEngine.NOSQL:
-            repo_class = repository_registry.get(DatabaseEngine.NOSQL)
-            return repo_class(identifier)
-        elif engine_type == DatabaseEngine.SQL:
-            repo_class = repository_registry.get(DatabaseEngine.SQL)
-            return repo_class(identifier)
-
-        raise ValueError(f"Unsupported database engine: {engine_type}")
+        repo_class = repository_registry.get(key)
+        return repo_class(identifier)
 
     @abstractmethod
     async def find_by_id(self, id: Union[int, str]) -> Optional[T]: ...
@@ -38,3 +32,8 @@ class IRepository(ABC, Generic[T]):
 
     @abstractmethod
     async def delete(self, id: Union[int, str]) -> bool: ...
+
+
+class IVectorRepository(IRepository[T], Generic[T]):
+    @abstractmethod
+    async def similarity_search(self, query_vector: List[float], limit: int = 5) -> List[Any]: ...

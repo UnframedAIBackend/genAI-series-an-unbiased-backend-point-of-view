@@ -69,3 +69,8 @@ docker-compose*.yml
 # Misc
 README.md
 LICENSE
+
+# MongoDB Local Data
+containers/mongodb/data/
+containers/mongodb/configdb/
+containers/mongodb/mongot/

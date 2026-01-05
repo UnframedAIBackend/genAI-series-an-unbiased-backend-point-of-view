@@ -21,7 +21,6 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production-base
-    profiles: [ app ]
     depends_on:
       postgres:
         condition: service_healthy
@@ -31,26 +30,18 @@ services:
       - genai-series
 
   mongodb:
-    build:
-      context: ./containers/mongodb
-      dockerfile: Dockerfile
-    restart: always
+    image: mongodb/mongodb-atlas-local
+    hostname: mongodb
     environment:
-      MONGO_INITDB_ROOT_USERNAME: mongo
-      MONGO_INITDB_ROOT_PASSWORD: mongo
-      MONGO_INITDB_DATABASE: mongo
+      - MONGODB_INITDB_ROOT_USERNAME=mongo
+      - MONGODB_INITDB_ROOT_PASSWORD=mongo
     ports:
       - 27017:27017
-    command: --replSet rs0 --keyFile /etc/mongo-keyfile --bind_ip_all --port 27017
-    healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" | mongosh --port 27017 -u mongo -p mongo --authenticationDatabase admin
-      interval: 5s
-      timeout: 15s
-      start_period: 15s
-      retries: 10
     volumes:
-      - "mongo_data:/data/db"
-      - "mongo_config:/data/configdb"
+      - ./containers/mongodb/init:/docker-entrypoint-initdb.d
+      - ./containers/mongodb/data:/data/db
+      - ./containers/mongodb/configdb:/data/configdb
+      - ./containers/mongodb/mongot:/data/mongot
     networks:
       - genai-series
 
@@ -59,11 +50,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production-base
-    profiles: [ app ]
     depends_on:
       mongodb:
         condition: service_healthy
     env_file: .env
+    environment:
+      - DATABASE_URL=mongodb://mongo:mongo@mongodb:27017/mongo?authSource=admin&directConnection=true
     command: make migrate-nosql
     networks:
       - genai-series
@@ -75,7 +67,7 @@ services:
     ports:
       - "11434:11434"
     entrypoint: /bin/sh
-    command: -c "ollama serve & sleep 5 && ollama pull tinyllama && wait"
+    command: -c "ollama serve & sleep 5 && ollama pull tinyllama && ollama pull nomic-embed-text && wait"
     healthcheck:
       test: [ "CMD-SHELL", "ollama list || exit 1" ]
       interval: 10s
@@ -141,17 +133,19 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    profiles: [ app ]
     depends_on:
       temporal:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      mongo_migrator:
+        condition: service_completed_successfully
     env_file: .env
     environment:
       - TEMPORAL_HOST=temporal:7233
-      - DATABASE_URL=mongodb://mongo:mongo@mongodb:27017/mongo?authSource=admin&replicaSet=rs0
+      - DATABASE_URL=mongodb://mongo:mongo@mongodb:27017/mongo?authSource=admin&directConnection=true
       - DATABASE_ENGINE=mongodb
+      - OLLAMA_HOST=http://ollama:11434
     healthcheck:
       test: [ "CMD-SHELL", "pgrep -f 'python.*worker.py' > /dev/null || exit 1" ]
       interval: 30s
@@ -169,15 +163,18 @@ services:
       context: .
       dockerfile: Dockerfile
       target: api
-    profiles: [ app ]
     depends_on:
       postgres_migrator:
-        condition: service_healthy
+        condition: service_completed_successfully
       mongo_migrator:
-        condition: service_healthy
+        condition: service_completed_successfully
       temporal:
         condition: service_healthy
     env_file: .env
+    environment:
+      - DATABASE_URL=mongodb://mongo:mongo@mongodb:27017/mongo?authSource=admin&directConnection=true
+      - TEMPORAL_HOST=temporal:7233
+      - OLLAMA_HOST=http://ollama:11434
     ports:
       - "8000:8000"
     healthcheck:
@@ -198,8 +195,9 @@ networks:
 
 volumes:
   postgres_data:
-  mongo_data:
-  mongo_config:
   ollama_data:
   mlflow_data:
   temporal_data:
+  mongodb_data:
+  mongodb_configdb:
+  mongodb_mongot:
