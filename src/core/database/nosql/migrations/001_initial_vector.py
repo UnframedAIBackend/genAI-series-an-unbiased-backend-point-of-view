@@ -1,12 +1,15 @@
+from src.core.configuration.configuration import config
+
+COLLECTION_NAME = "vector_store"
+
 async def up(db):
-    collection_name = "vector_store"
 
     collections = await db.list_collection_names()
-    if collection_name not in collections:
-        await db.create_collection(collection_name)
-        print(f"Created collection: {collection_name}")
+    if COLLECTION_NAME not in collections:
+        await db.create_collection(COLLECTION_NAME)
+        print(f"Created collection: {COLLECTION_NAME}")
 
-    await db[collection_name].create_index([("file_id", 1)], name="idx_embeddings_file_id")
+    await db[COLLECTION_NAME].create_index([("file_id", 1)], name="idx_embeddings_file_id")
 
     search_index_name = "vector_index"
 
@@ -15,19 +18,25 @@ async def up(db):
         "definition": {
             "mappings": {
                 "dynamic": True,
-                "fields": {"embedding": {"dimensions": 384, "similarity": "cosine", "type": "knnVector"}},
+                "fields": {
+                    config.get("VECTOR_FIELD_NAME"): {
+                        "dimensions": config.get("VECTOR_DIMENSION"),
+                        "similarity": config.get("VECTOR_SIMILARITY"),
+                        "type": config.get("VECTOR_SIMILARITY_TYPE"),
+                    }
+                },
             }
         },
     }
 
     try:
-        await db[collection_name].create_search_index(model=search_index_definition)
+        await db[COLLECTION_NAME].create_search_index(model=search_index_definition)
         print(f"✓ Search index creation initiated: {search_index_name}")
     except Exception:
-        await db[collection_name].create_index([("embedding", 1)], name="idx_embeddings_fallback")
+        await db[COLLECTION_NAME].create_index([(config.get("VECTOR_FIELD_NAME"), 1)], name="idx_embeddings_fallback")
         print("✓ Standard fallback index created")
 
 
 async def down(db):
-    await db.drop_collection("embeddings")
+    await db.drop_collection(COLLECTION_NAME)
     print("Dropped collection: embeddings")

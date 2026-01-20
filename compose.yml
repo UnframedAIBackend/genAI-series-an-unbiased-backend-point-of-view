@@ -21,6 +21,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production-base
+      args:
+        - HF_TOKEN=${HF_TOKEN}
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,6 +52,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production-base
+      args:
+        - HF_TOKEN=${HF_TOKEN}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -133,6 +137,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
+      args:
+        - HF_TOKEN=${HF_TOKEN}
     depends_on:
       temporal:
         condition: service_healthy
@@ -163,6 +169,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: api
+      args:
+        - HF_TOKEN=${HF_TOKEN}
     depends_on:
       postgres_migrator:
         condition: service_completed_successfully

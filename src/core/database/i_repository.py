@@ -1,20 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, List, Optional, TypeVar, Union
 
-from src.core.configuration.configuration import config
-from src.core.database.repository_registry import repository_registry
-
 T = TypeVar("T")
 
 
 class IRepository(ABC, Generic[T]):
-    def _get_engine(self, identifier: str, is_vector: bool = False) -> Any:
-        engine_type = config.get("DATABASE_ENGINE")
-        key = f"{engine_type}_vector" if is_vector else engine_type
-
-        repo_class = repository_registry.get(key)
-        return repo_class(identifier)
-
     @abstractmethod
     async def find_by_id(self, id: Union[int, str]) -> Optional[T]: ...
 

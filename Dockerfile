@@ -38,6 +38,13 @@ RUN uv sync --frozen --no-install-project --no-dev
 # Copy source code
 COPY src/ ./src/
 
+# Preload HuggingFace models during build
+ARG HF_TOKEN
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app:$PYTHONPATH" \
+    HF_TOKEN=${HF_TOKEN}
+RUN python ./src/scripts/preload.py
+
 
 # Stage 3: Development image
 FROM base AS development
@@ -61,8 +68,10 @@ CMD ["make", "api"]
 FROM base AS production-base
 
 COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/.cache /app/.cache
 ENV PATH="/app/.venv/bin:$PATH" \
-    PYTHONPATH="/app:$PYTHONPATH"
+    PYTHONPATH="/app:$PYTHONPATH" \
+    HF_HOME=/app/.cache
 
 COPY src/ ./src/
 COPY pyproject.toml uv.lock ./

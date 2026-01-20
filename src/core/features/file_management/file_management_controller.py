@@ -2,7 +2,6 @@ import json
 import logging
 from typing import BinaryIO, Optional
 
-from src.core.configuration.configuration import config
 from src.core.features.file_management.file_management_repository import FileManagementRepository
 from src.core.features.rag.rag_service import RagService
 

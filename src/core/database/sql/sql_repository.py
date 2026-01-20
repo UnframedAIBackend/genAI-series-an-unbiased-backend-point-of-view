@@ -5,9 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from src.core.configuration.configuration import config
-from src.core.database.database_engine import DatabaseEngine
 from src.core.database.i_repository import IRepository
-from src.core.database.repository_registry import repository_registry
 
 T = TypeVar("T")
 
@@ -76,6 +74,3 @@ class SQLRepository(IRepository[T]):
             result = await session.execute(text(f"DELETE FROM {self.full_table_name} WHERE id = :id"), {"id": id})
             await session.commit()
             return result.rowcount > 0
-
-
-repository_registry.register(DatabaseEngine.SQL, SQLRepository)

@@ -33,8 +33,11 @@ build:
 up:
 	$(COMPOSE) --profile app up -d
 
-docker-up:
-	$(COMPOSE) up --build -d postgres mongodb ollama mlflow temporal temporal-ui rag-worker mongo_migrator postgres_migrator
+docker-up-sql:
+	$(COMPOSE) up --build -d postgres ollama mlflow temporal temporal-ui rag-worker postgres_migrator
+
+docker-up-nosql:
+	$(COMPOSE) up --build -d postgres mongodb ollama mlflow temporal temporal-ui rag-worker mongo_migrator
 
 preload:
 	uv run python src/scripts/preload.py

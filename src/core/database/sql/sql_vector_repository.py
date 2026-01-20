@@ -3,9 +3,7 @@ from typing import List
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.database.database_engine import DatabaseEngine
 from src.core.database.i_repository import IVectorRepository
-from src.core.database.repository_registry import repository_registry
 from src.core.database.sql.sql_repository import SQLRepository, T
 
 
@@ -21,6 +19,3 @@ class SQLVectorRepository(SQLRepository[T], IVectorRepository[T]):
             result = await session.execute(sql, {"vector": vector_str, "limit": limit})
             mappings = result.mappings().all()
             return [{**m, "score": 1 - m["score"]} for m in mappings]
-
-
-repository_registry.register(f"{DatabaseEngine.SQL.value}_vector", SQLVectorRepository)

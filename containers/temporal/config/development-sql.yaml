@@ -20,3 +20,9 @@ system.enableArchival:
 system.advancedVisibilityWritingMode:
   - value: "on"
     constraints: {}
+
+# Increase blob size limit to 50MB (default 2MB)
+limit.blobSize.errorLimit:
+  - value: 52428800
+limit.blobSize.warnLimit:
+  - value: 52428800

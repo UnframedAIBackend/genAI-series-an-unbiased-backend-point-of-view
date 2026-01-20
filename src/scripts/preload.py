@@ -1,18 +1,23 @@
 import logging
+import os
 import sys
 
 from sentence_transformers import SentenceTransformer, models
 
-from src.core.configuration.configuration import config
 from src.core.features.embedding.embedding_models import EMBEDDING_MODEL_MAP
 
-log_level = config.get("LOG_LEVEL").upper()
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=getattr(logging, log_level))
 transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(getattr(logging, log_level))
 
+
 def preload():
-    token = config.get("HF_TOKEN")
+    token = os.getenv("HF_TOKEN")
+
+    if not token:
+        print("Warning: HF_TOKEN not set. Model downloads may fail for private models.")
+        token = None
 
     for key, model_id in EMBEDDING_MODEL_MAP.items():
         print(f"Downloading {key}: {model_id}...")
@@ -33,6 +38,7 @@ def preload():
             sys.exit(1)
 
     print("All models preloaded!")
+
 
 if __name__ == "__main__":
     preload()

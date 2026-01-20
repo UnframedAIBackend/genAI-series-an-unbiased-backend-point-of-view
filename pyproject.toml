@@ -20,6 +20,9 @@ dependencies = [
     "ragas>=0.4.1",
     "temporalio>=1.21.0",
     "litellm>=1.80.11",
+    "mlflow>=3.8.1",
+    "langchain-ollama>=1.0.1",
+    "python-dotenv>=1.2.1",
 ]
 
 [dependency-groups]

@@ -6,9 +6,7 @@ from bson import ObjectId
 from pymongo import AsyncMongoClient
 
 from src.core.configuration.configuration import config
-from src.core.database.database_engine import DatabaseEngine
 from src.core.database.i_repository import IRepository
-from src.core.database.repository_registry import repository_registry
 
 T = TypeVar("T")
 
@@ -93,6 +91,3 @@ class NoSQLRepository(IRepository[T]):
 
         result = await self.collection.delete_one({"_id": object_id})
         return result.deleted_count > 0
-
-
-repository_registry.register(DatabaseEngine.NOSQL, NoSQLRepository)

@@ -7,27 +7,33 @@ from src.core.features.rag.workflows.activities.activity_output import ChunkData
 
 @activity.defn
 async def generate_embeddings(chunk_data: ChunkData) -> EmbeddingData:
-    embedding_model = config.get("EMBEDDING_MODEL")
-    embedding_service = container.embedding_service()
+    try:
+        embedding_model = config.get("EMBEDDING_MODEL")
+        embedding_service = container.embedding_service()
 
-    texts = [chunk.content for chunk in chunk_data.chunks]
+        texts = [chunk.content for chunk in chunk_data.chunks]
 
-    embeddings = embedding_service.generate(embedding_model, texts)
+        embeddings = embedding_service.generate(embedding_model, texts)
 
-    embedding_items = []
-    for chunk, embedding in zip(chunk_data.chunks, embeddings):
-        embedding_items.append(
-            EmbeddingItem(
-                content=chunk.content,
-                embedding=embedding,
-                metadata={
-                    **chunk.metadata,
-                    "embedding_model": embedding_model,
-                    "file_id": chunk.metadata.get("file_id"),
-                },
+        embedding_items = []
+        for chunk, embedding in zip(chunk_data.chunks, embeddings):
+            embedding_items.append(
+                EmbeddingItem(
+                    content=chunk.content,
+                    embedding=embedding,
+                    metadata={
+                        **chunk.metadata,
+                        "embedding_model": embedding_model,
+                        "file_id": chunk.metadata.get("file_id"),
+                    },
+                )
             )
-        )
 
-    activity.logger.info(f"Generated {len(embeddings)} embeddings using {embedding_model} model")
+        activity.logger.info(f"Generated {len(embeddings)} embeddings using {embedding_model} model")
 
-    return EmbeddingData(embeddings=embedding_items)
+        return EmbeddingData(embeddings=embedding_items)
+    except Exception as e:
+        import traceback
+
+        activity.logger.error(f"Generate embeddings failed: {str(e)}\n{traceback.format_exc()}")
+        raise e

@@ -1,14 +1,13 @@
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Type, Union
 
 from src.core.database.i_repository import IRepository, T
 
 
 class FileManagementRepository(IRepository[T]):
     __IDENTIFIER: str = "file_management"
-    __repository: IRepository
 
-    def __init__(self):
-        self.__repository = self._get_engine(self.__IDENTIFIER)
+    def __init__(self, repository_class: Type[IRepository]):
+        self.__repository = repository_class(self.__IDENTIFIER)
 
     async def find_by_id(self, id: Union[int, str]) -> Optional[T]:
         return await self.__repository.find_by_id(id)

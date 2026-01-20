@@ -1,7 +1,10 @@
 from dependency_injector import containers, providers
 
-from src.core.database.nosql.nosql_repository import NoSQLRepository  # noqa: F401
-from src.core.database.sql.sql_repository import SQLRepository  # noqa: F401
+from src.core.configuration.configuration import config
+from src.core.database.nosql.nosql_repository import NoSQLRepository
+from src.core.database.nosql.nosql_vector_repository import NoSQLVectorRepository
+from src.core.database.sql.sql_repository import SQLRepository
+from src.core.database.sql.sql_vector_repository import SQLVectorRepository
 from src.core.features.chunk.chunk_strategy_controller import ChunkStrategyController
 from src.core.features.chunk.chunk_strategy_service import ChunkStrategyService
 from src.core.features.embedding.embedding_controller import EmbeddingController
@@ -17,8 +20,29 @@ from src.core.features.vector_store.vector_store_service import VectorStoreServi
 
 
 class Container(containers.DeclarativeContainer):
-    file_management_repository = providers.Singleton(FileManagementRepository)
-    vector_store_repository = providers.Singleton(VectorStoreRepository)
+    db_engine = providers.Object(config.get("DATABASE_ENGINE"))
+
+    base_repository_class = providers.Selector(
+        db_engine,
+        mongodb=providers.Object(NoSQLRepository),
+        postgres=providers.Object(SQLRepository),
+    )
+
+    vector_repository_class = providers.Selector(
+        db_engine,
+        mongodb=providers.Object(NoSQLVectorRepository),
+        postgres=providers.Object(SQLVectorRepository),
+    )
+
+    file_management_repository = providers.Singleton(
+        FileManagementRepository,
+        repository_class=base_repository_class,
+    )
+
+    vector_store_repository = providers.Singleton(
+        VectorStoreRepository,
+        repository_class=vector_repository_class,
+    )
 
     file_management_service = providers.Factory(FileManagementService, repository=file_management_repository)
 
