@@ -40,4 +40,4 @@ async def chunk_file(input_data: FileProcessingInput) -> ChunkData:
 
     activity.logger.info(f"Chunked file {input_data.file_id} into {len(chunk_items)} chunks using {strategy} strategy")
 
-    return ChunkData(strategy=strategy, chunks=chunk_items)
+    return ChunkData(strategy=strategy, chunks=chunk_items, file_id=input_data.file_id)

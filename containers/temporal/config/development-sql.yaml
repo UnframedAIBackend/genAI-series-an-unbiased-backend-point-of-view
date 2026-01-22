@@ -21,8 +21,20 @@ system.advancedVisibilityWritingMode:
   - value: "on"
     constraints: {}
 
-# Increase blob size limit to 50MB (default 2MB)
+# Increase blob size limit to 1GB (default 2MB) - needed for large embeddings
 limit.blobSize.errorLimit:
-  - value: 52428800
+  - value: 1073741824  # 1GB
 limit.blobSize.warnLimit:
-  - value: 52428800
+  - value: 536870912   # 512MB
+
+# Increase history size limits to accommodate large payloads (2GB for safety)
+limit.historySize.error:
+  - value: 2147483648  # 2GB
+limit.historySize.warn:
+  - value: 1073741824  # 1GB
+
+# Increase history count limits
+limit.historyCount.error:
+  - value: 204800
+limit.historyCount.warn:
+  - value: 102400

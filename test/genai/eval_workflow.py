@@ -31,14 +31,12 @@ except ImportError:
     # Fallback/Debug
     from ragas.testset.synthesizers.generate import TestsetGenerator
 
-from src.core.configuration.configuration import config
-from src.core.features.rag.rag_controller import RagController
-from src.core.features.rag.rag_service import RagService
-from src.core.features.vector_store.vector_store_service import VectorStoreService
 from src.core.features.embedding.embedding_service import EmbeddingService
 from src.core.features.llm.llm_service import LlmService
+from src.core.features.rag.rag_controller import RagController
+from src.core.features.rag.rag_service import RagService
 from src.core.features.vector_store.vector_store_repository import VectorStoreRepository
-from src.core.features.embedding.embedding_models import Embedding
+from src.core.features.vector_store.vector_store_service import VectorStoreService
 
 # Configure logging to ensure stdout capture
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

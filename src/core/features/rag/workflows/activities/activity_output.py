@@ -27,21 +27,22 @@ class FileProcessingInput:
 @dataclass
 class ChunkItem:
     content: str
-    metadata: VectorMetadata
+    metadata: dict  # Changed from VectorMetadata to dict for better Temporal serialization
 
 @dataclass
 class ChunkData:
     strategy: str
     chunks: List[ChunkItem]
+    file_id: str  # Add for easier batch processing
 
 
 @dataclass
-class EmbeddingItem(ChunkItem):
-    embedding: List[float]
-
-@dataclass
-class EmbeddingData:
-    embeddings: List[EmbeddingItem]
+class BatchProcessingResult:
+    """Result from processing and storing a batch of embeddings - only metadata, no large data"""
+    batch_number: int
+    chunks_processed: int
+    vectors_stored: int
+    embedding_model: str
 
 
 @dataclass

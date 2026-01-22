@@ -4,6 +4,7 @@ from typing import Type
 from pypdf import PdfReader
 
 from src.core.configuration.configuration import config
+
 from .chunk_strategy import ChunkStrategy
 from .strategies.chonkie_chunk_strategy import ChonkieChunkStrategy
 from .strategies.i_chunk_strategy import IChunkStrategy
