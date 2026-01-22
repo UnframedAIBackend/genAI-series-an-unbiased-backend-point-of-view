@@ -33,4 +33,5 @@ ENV_SCHEMA: dict[str, EnvVarSchema] = {
     "VECTOR_FIELD_NAME": EnvVarSchema(required=False, type=str, default="embedding"),
     "VECTOR_SIMILARITY": EnvVarSchema(required=False, type=str, default="cosine"),
     "VECTOR_SIMILARITY_TYPE": EnvVarSchema(required=False, type=str, default="knnVector"),
+    "BATCH_SIZE": EnvVarSchema(required=False, type=int, default=50),
 }
