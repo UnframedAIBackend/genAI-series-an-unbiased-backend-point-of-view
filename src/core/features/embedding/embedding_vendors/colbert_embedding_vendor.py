@@ -5,7 +5,6 @@ from src.core.features.embedding.embedding_vendors.i_embedding_vendor import IEm
 
 
 class ColbertEmbeddingVendor(IEmbeddingVendor):
-
     def __init__(self):
         self.model = None
 
@@ -18,14 +17,9 @@ class ColbertEmbeddingVendor(IEmbeddingVendor):
             model_id = EMBEDDING_MODEL_MAP[Embedding.COLBERT]
             token = config.get("HF_TOKEN")
 
-            # Initialize explicitly as a Transformer to avoid "No sentence-transformers model found" warning
             word_embedding_model = models.Transformer(model_id, model_args={"token": token})
-            self.model = SentenceTransformer(modules=[word_embedding_model])
+            pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(), pooling_mode="mean")
+            self.model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
-        features = self.model.tokenize(chunks)
-        features = {key: value.to(self.model.device) for key, value in features.items()}
-
-        out = self.model.forward(features)
-        token_embeddings = out['token_embeddings']
-
-        return token_embeddings.tolist()
+        embeddings = self.model.encode(chunks)
+        return embeddings.tolist()

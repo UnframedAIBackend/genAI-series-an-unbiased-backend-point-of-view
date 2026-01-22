@@ -48,6 +48,8 @@ class EmbeddingActivity:
                 texts = [chunk.content for chunk in batch_chunks]
                 embeddings = self.embedding_service.generate(embedding_model, texts)
 
+                activity.heartbeat()
+
                 total_vectors += await self.save_vectors_in_batch(chunk_data, batch_chunks, embeddings, embedding_model)
 
             return BatchProcessingResult(

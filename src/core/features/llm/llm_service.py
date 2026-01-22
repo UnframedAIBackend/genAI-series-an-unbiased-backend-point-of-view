@@ -9,6 +9,8 @@ class LlmService:
     def __init__(self):
         self.host = config.get("OLLAMA_HOST")
         self.model = config.get("GENERATION_MODEL")
+        print("host", self.host)
+        print("model", self.model)
 
     def generate(self, prompt: str) -> str:
         """

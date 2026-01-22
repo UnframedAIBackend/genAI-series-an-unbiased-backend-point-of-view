@@ -37,8 +37,8 @@ docker-up-sql:
 	$(COMPOSE) up --build -d postgres ollama mlflow temporal temporal-ui rag-worker postgres_migrator
 
 docker-up-nosql:
-	# ollama mlflow
-	$(COMPOSE) up --build -d postgres mongodb temporal temporal-ui rag-worker mongo_migrator
+	# mlflow
+	$(COMPOSE) up --build -d postgres ollama mongodb temporal temporal-ui rag-worker mongo_migrator
 
 preload:
 	uv run python src/scripts/preload.py

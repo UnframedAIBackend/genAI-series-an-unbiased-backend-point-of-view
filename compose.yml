@@ -71,7 +71,7 @@ services:
     ports:
       - "11434:11434"
     entrypoint: /bin/sh
-    command: -c "ollama serve & sleep 5 && ollama pull tinyllama && ollama pull nomic-embed-text && wait"
+    command: -c "ollama serve & sleep 5 && ollama pull smollm2:135m-instruct-q4_0 && wait"
     healthcheck:
       test: [ "CMD-SHELL", "ollama list || exit 1" ]
       interval: 10s
