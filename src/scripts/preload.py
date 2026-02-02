@@ -25,7 +25,8 @@ def preload():
             if "colbert" in model_id.lower():
                 print("  - Initializing as explicit Transformer module...")
                 word_embedding_model = models.Transformer(model_id, model_args={"token": token})
-                SentenceTransformer(modules=[word_embedding_model])
+                pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(), pooling_mode="mean")
+                SentenceTransformer(modules=[word_embedding_model, pooling_model])
             else:
                 SentenceTransformer(model_id, token=token, trust_remote_code=True)
 

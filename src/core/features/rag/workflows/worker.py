@@ -42,7 +42,7 @@ async def main():
         workflows=[FileProcessingWorkflow],
         activities=[
             chunking_activities.chunk_file,
-            embedding_activities.process_and_store_embeddings_batched,
+            embedding_activities.index_chunks,
             status_activities.update_file_status,
         ],
         max_concurrent_activities=10,

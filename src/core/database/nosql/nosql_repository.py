@@ -48,7 +48,6 @@ class NoSQLRepository(IRepository[T]):
         try:
             document = await self.collection.find_one({"_id": ObjectId(id)})
         except Exception:
-            # If id is not a valid ObjectId, try finding by "id" field
             pass
 
         if not document:
@@ -65,15 +64,12 @@ class NoSQLRepository(IRepository[T]):
         try:
             query = {"_id": ObjectId(id)}
         except Exception:
-            # If id is not a valid ObjectId, assume it's a custom id field
             query = {"id": id}
 
         data["updated_at"] = datetime.now()
 
-        # Try updating
         result = await self.collection.find_one_and_update(query, {"$set": data}, return_document=True)
 
-        # If unexpected failure with ObjectId, try fallback to custom id (if we originally tried ObjectId)
         if not result and "_id" in query:
             result = await self.collection.find_one_and_update({"id": id}, {"$set": data}, return_document=True)
 

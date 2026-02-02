@@ -14,31 +14,11 @@ with workflow.unsafe.imports_passed_through():
 
 @workflow.defn
 class FileProcessingWorkflow:
-    """
-    Workflow for processing uploaded files through chunking, embedding, and vector storage.
-
-    This workflow follows Temporal best practices:
-    1. Chunk the file using configured strategy (returns metadata + chunks)
-    2. Process embeddings in batches and store directly to DB (returns only metadata)
-    3. Update processing status
-
-    Large data (embeddings) never passes through workflow history - stored directly by activities.
-    """
 
     @workflow.run
     async def run(self, input_data: FileProcessingInput) -> FileProcessingResult:
-        """
-        Execute the file processing workflow.
-
-        Args:
-            input_data: File processing configuration and metadata
-
-        Returns:
-            FileProcessingResult with processing statistics
-        """
 
         try:
-            # Step 1: Chunk the file
             chunk_data = await workflow.execute_activity(
                 ChunkingActivity.chunk_file,
                 args=[input_data],
@@ -51,7 +31,7 @@ class FileProcessingWorkflow:
             workflow.logger.info(f"Chunked file into {len(chunk_data.chunks)} chunks")
 
             batch_result = await workflow.execute_activity(
-                EmbeddingActivity.process_and_store_embeddings_batched,
+                EmbeddingActivity.index_chunks,
                 args=[chunk_data],
                 start_to_close_timeout=timedelta(minutes=30),
                 heartbeat_timeout=timedelta(seconds=30),

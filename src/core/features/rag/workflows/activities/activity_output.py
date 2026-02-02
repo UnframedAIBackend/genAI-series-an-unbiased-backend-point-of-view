@@ -29,6 +29,7 @@ class ChunkItem:
     content: str
     metadata: dict
 
+
 @dataclass
 class ChunkData:
     strategy: str

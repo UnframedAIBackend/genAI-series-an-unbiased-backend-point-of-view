@@ -26,7 +26,6 @@ class SQLRepository(IRepository[T]):
             return result.mappings().all()
 
     async def create(self, data: Any) -> Any:
-        # Convert to dict if it's a dataclass
         doc = asdict(data) if is_dataclass(data) else dict(data)
 
         columns = ", ".join(doc.keys())
@@ -42,7 +41,6 @@ class SQLRepository(IRepository[T]):
         if not data:
             return []
 
-        # Convert each item to dict if it's a dataclass
         docs = [asdict(item) if is_dataclass(item) else dict(item) for item in data]
 
         columns = ", ".join(docs[0].keys())

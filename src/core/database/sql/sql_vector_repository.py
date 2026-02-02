@@ -9,7 +9,6 @@ from src.core.database.sql.sql_repository import SQLRepository, T
 
 class SQLVectorRepository(SQLRepository[T], IVectorRepository[T]):
     async def similarity_search(self, query_vector: List[float], limit: int = 5) -> List[T]:
-        # Using pgvector distance operator <=> for cosine distance (1 - cosine similarity)
         vector_str = f"[{','.join(map(str, query_vector))}]"
         sql = text(
             f"SELECT *, (embedding <=> :vector) as score FROM {self.full_table_name} "

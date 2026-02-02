@@ -24,5 +24,4 @@ class LlmService:
             )
             return response.choices[0].message.content
         except Exception as e:
-            # Basic error handling, we might want to raise a custom exception later
             return f"Error generating answer: {str(e)}"

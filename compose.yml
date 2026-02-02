@@ -132,6 +132,19 @@ services:
     networks:
       - genai-series
 
+  model_downloader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production-base
+    image: rag-worker:latest
+    container_name: model_downloader
+    volumes:
+      - ./containers/hf/models:/app/.cache
+    env_file:
+      - .env
+    command: python src/scripts/preload.py
+
   rag-worker:
     build:
       context: .
@@ -163,6 +176,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./uploads:/app/uploads
+      - ./containers/hf/models:/app/.cache
 
   api:
     build:
@@ -172,6 +186,8 @@ services:
       args:
         - HF_TOKEN=${HF_TOKEN}
     depends_on:
+      model_downloader:
+        condition: service_completed_successfully
       postgres_migrator:
         condition: service_completed_successfully
       mongo_migrator:
@@ -196,6 +212,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./uploads:/app/uploads
+      - ./containers/hf/models:/app/.cache
 
 networks:
   genai-series:

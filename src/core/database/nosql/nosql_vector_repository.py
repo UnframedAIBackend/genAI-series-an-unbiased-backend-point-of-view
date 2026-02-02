@@ -6,9 +6,6 @@ from src.core.database.nosql.nosql_repository import NoSQLRepository, T
 
 class NoSQLVectorRepository(NoSQLRepository[T], IVectorRepository[T]):
     async def similarity_search(self, query_vector: List[float], limit: int = 5) -> List[dict]:
-        print("query_vector", query_vector[0:10])
-        count = await self.collection.count_documents({})
-        print(f"Total documents in collection {self.collection.name}: {count}")
         pipeline = [
             {
                 "$vectorSearch": {

@@ -6,12 +6,10 @@ class RagController:
         self.rag_service = rag_service
 
     async def query(self, user_query: str) -> dict:
-        # 1. Retrieve
         relevant_docs = await self.rag_service.retrieve(user_query)
 
         print("relevant_docs", relevant_docs)
 
-        # 2. Generate
         answer = self.rag_service.generate(relevant_docs, user_query)
 
         return {"query": user_query, "answer": answer, "retrieved_docs": relevant_docs}

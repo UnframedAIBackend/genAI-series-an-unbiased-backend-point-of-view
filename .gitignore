@@ -16,3 +16,6 @@ uploads/
 containers/mongodb/data/
 containers/mongodb/configdb/
 containers/mongodb/mongot/
+
+# Hugging Face Models
+containers/hf/models

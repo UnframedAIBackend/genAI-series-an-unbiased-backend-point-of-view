@@ -1,3 +1,8 @@
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 COMPOSE ?= docker compose
 PORT ?= 8000
 WORKERS ?= 4
@@ -40,11 +45,14 @@ docker-up-nosql:
 	# mlflow
 	$(COMPOSE) up --build -d postgres ollama mongodb temporal temporal-ui rag-worker mongo_migrator
 
+docker-run-model-downloader:
+	$(COMPOSE) up model_downloader
+
 preload:
-	uv run python src/scripts/preload.py
+	uv run --no-project python src/scripts/preload.py
 
 dev: preload docker-up
-	uv run python src/apps/rest_api/main.py
+	uv run --no-project python src/apps/rest_api/main.py
 
 down:
 	$(COMPOSE) down
@@ -69,19 +77,22 @@ install-deps:
 	uv sync
 
 rag-worker:
-	python src/core/features/rag/workflows/worker.py
+	uv run --no-project python src/core/features/rag/workflows/worker.py
+
+download-models:
+	$(COMPOSE) up model_downloader
 
 migrate-sql:
-	python src/core/database/sql/migrate.py
+	uv run --no-project python src/core/database/sql/migrate.py
 
 migrate-nosql:
-	python src/core/database/nosql/migrate.py
+	uv run --no-project python src/core/database/nosql/migrate.py
 
 lint:
-	uv run ruff check .
+	uv run --no-project ruff check .
 
 lint-fix:
-	uv run ruff check --fix .
+	uv run --no-project ruff check --fix .
 
 api:
 	python -m uvicorn src.apps.rest_api.main:app --host 0.0.0.0 --port $(PORT) --reload

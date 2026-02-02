@@ -8,11 +8,9 @@ from src.core.features.embedding.embedding_controller import EmbeddingController
 from src.core.features.embedding.embedding_models import Embedding
 
 
-# Removing model_id from request body
 class EmbeddingRequest(BaseModel):
     chunks: list[str]
 
-# Response remains the same
 class EmbeddingResponse(BaseModel):
     model_id: Embedding
     total_chunks: int

@@ -17,13 +17,7 @@ class EmbeddingActivity:
         self.vector_store_service = container.vector_store_service()
 
     @activity.defn
-    async def process_and_store_embeddings_batched(self, chunk_data: ChunkData) -> BatchProcessingResult:
-        """
-        Process chunks in batches: generate embeddings and store directly to vector DB.
-        Returns only metadata about processing - no large embedding data through Temporal.
-
-        Activities should persist data directly, not pass large payloads through workflow history.
-        """
+    async def index_chunks(self, chunk_data: ChunkData) -> BatchProcessingResult:
         try:
             embedding_model = config.get("EMBEDDING_MODEL")
             batch_size = config.get("BATCH_SIZE")
@@ -36,14 +30,10 @@ class EmbeddingActivity:
             total_chunks = len(chunk_data.chunks)
             total_vectors = 0
 
-            for batch_num, i in enumerate(range(0, total_chunks, batch_size), start=1):
-                batch_chunks = chunk_data.chunks[i : i + batch_size]
+            for batch_num, batch_chunks in enumerate(self._yield_batches(chunk_data.chunks, batch_size), start=1):
                 current_batch_size = len(batch_chunks)
 
-                activity.logger.info(
-                    f"Processing batch {batch_num}: chunks {i} to {i + current_batch_size - 1} "
-                    f"({current_batch_size} chunks)"
-                )
+                activity.logger.info(f"Processing batch {batch_num}: ({current_batch_size} chunks)")
 
                 texts = [chunk.content for chunk in batch_chunks]
                 embeddings = self.embedding_service.generate(embedding_model, texts)
@@ -63,6 +53,11 @@ class EmbeddingActivity:
 
             activity.logger.error(f"Batch processing failed: {str(e)}\n{traceback.format_exc()}")
             raise e
+
+    def _yield_batches(self, items: list, batch_size: int):
+        """Generator that yields batches of items."""
+        for i in range(0, len(items), batch_size):
+            yield items[i : i + batch_size]
 
     async def save_vectors_in_batch(
         self, chunk_data: ChunkData, batch_chunks: list[ChunkItem], embeddings: list[list[float]], embedding_model: str
